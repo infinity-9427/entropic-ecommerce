@@ -63,16 +63,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold tracking-tight mb-2">
-            Welcome to Entropic
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Discover amazing products at great prices
-          </p>
-        </div>
 
         <ProductFilters
           searchTerm={searchTerm}

@@ -120,3 +120,37 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Brand Ticker Animations */
+@keyframes brand-ticker-scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.333333%);
+  }
+}
+
+@keyframes brand-ticker-scroll-right {
+  0% {
+    transform: translateX(-33.333333%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.brand-ticker-scroll-left {
+  animation: brand-ticker-scroll-left var(--scroll-duration, 30s) linear infinite;
+}
+
+.brand-ticker-scroll-right {
+  animation: brand-ticker-scroll-right var(--scroll-duration, 30s) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-ticker-scroll-left,
+  .brand-ticker-scroll-right {
+    animation-duration: 120s;
+  }
+}

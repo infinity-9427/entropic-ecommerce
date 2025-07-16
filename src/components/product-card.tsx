@@ -20,7 +20,7 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Card className="group overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
+    <Card className="group overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col p-0 gap-0">
       <div className="aspect-square overflow-hidden">
         <Image
           src={product.image}
@@ -30,21 +30,23 @@ export function ProductCard({ product }: ProductCardProps) {
           className="w-full h-full object-cover transition-transform group-hover:scale-105"
         />
       </div>
-      <CardContent className="p-4 flex-1 flex flex-col">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="font-semibold line-clamp-2 text-sm flex-1">{product.name}</h3>
-          <Badge variant="secondary" className="text-xs shrink-0">
-            {product.category}
-          </Badge>
+      <CardContent className="p-4 flex-1 flex flex-col justify-between">
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-semibold line-clamp-2 text-sm flex-1">{product.name}</h3>
+            <Badge variant="secondary" className="text-xs shrink-0">
+              {product.category}
+            </Badge>
+          </div>
+          <p className="text-xs text-muted-foreground line-clamp-2">
+            {product.description}
+          </p>
         </div>
-        <p className="text-xs text-muted-foreground line-clamp-2 mb-3 flex-1">
-          {product.description}
-        </p>
-        <div className="mt-auto">
+        <div className="mt-4">
           <span className="font-bold text-lg">${product.price}</span>
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0 mt-auto">
+      <CardFooter className="p-4 pt-0">
         <Button 
           onClick={handleAddToCart}
           className="w-full" 

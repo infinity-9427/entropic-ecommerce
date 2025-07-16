@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { Header } from '@/components/header';
 import { ProductCard } from '@/components/product-card';
-import { ProductFilters } from '@/components/product-filters';
 import { products } from '@/lib/data';
 
 export default function Home() {
@@ -58,23 +57,18 @@ export default function Home() {
     });
 
     return filtered;
-  }, [searchTerm, selectedCategory, sortBy]);
-
-  return (
+  }, [searchTerm, selectedCategory, sortBy]);  return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header 
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+      />
 
-      <main className="container mx-auto px-4 py-8">
-
-        <ProductFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-        />
-
+      <main className="container mx-auto px-4 py-6">
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">

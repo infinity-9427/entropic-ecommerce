@@ -1,17 +1,13 @@
 import { Header } from '@/components/header';
-import { BrandTickerCompact } from '@/components/brand-ticker';
 
 export default function NewArrivalsPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6">
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4">New Arrivals</h1>
           <p className="text-xl text-muted-foreground mb-8">Check out the latest products in our collection</p>
-          
-          {/* Brand Ticker for new arrivals page */}
-          <BrandTickerCompact className="my-8" speed={25} />
           
           <div className="bg-card p-8 rounded-lg border">
             <div className="text-6xl mb-4">✨</div>

@@ -9,7 +9,7 @@ import { products } from '@/lib/data';
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [sortBy, setSortBy] = useState('name');
+  const [sortBy, setSortBy] = useState('relevance');
 
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = products.filter((product) => {
@@ -27,10 +27,32 @@ export default function Home() {
           return a.price - b.price;
         case 'price-high':
           return b.price - a.price;
-        case 'category':
-          return a.category.localeCompare(b.category);
-        case 'name':
+        case 'relevance':
         default:
+          // Default relevance: match score + alphabetical
+          const aScore = (product: typeof a) => {
+            let score = 0;
+            if (searchTerm) {
+              const searchLower = searchTerm.toLowerCase();
+              const nameLower = product.name.toLowerCase();
+              const descLower = product.description.toLowerCase();
+              
+              // Exact name match gets highest score
+              if (nameLower.includes(searchLower)) score += 100;
+              // Description match gets lower score
+              if (descLower.includes(searchLower)) score += 50;
+            }
+            return score;
+          };
+          
+          const scoreA = aScore(a);
+          const scoreB = aScore(b);
+          
+          if (scoreA !== scoreB) {
+            return scoreB - scoreA; // Higher score first
+          }
+          
+          // If same score, sort alphabetically
           return a.name.localeCompare(b.name);
       }
     });
@@ -61,16 +83,27 @@ export default function Home() {
           onSortChange={setSortBy}
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredAndSortedProducts.map((product) => (
+        {/* Results Count */}
+        <div className="mb-6">
+          <p className="text-sm text-muted-foreground">
+            {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? 'result' : 'results'}
+            {searchTerm && ` for "${searchTerm}"`}
+            {selectedCategory !== 'All' && ` in ${selectedCategory}`}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">{filteredAndSortedProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
 
         {filteredAndSortedProducts.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">
-              No products found matching your criteria.
+            <p className="text-muted-foreground text-lg mb-2">
+              No products found
+            </p>
+            <p className="text-muted-foreground text-sm">
+              Try adjusting your search or filter criteria
             </p>
           </div>
         )}

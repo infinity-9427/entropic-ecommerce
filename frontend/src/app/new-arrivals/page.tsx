@@ -13,7 +13,7 @@ export default function NewArrivalsPage() {
             <div className="text-6xl mb-4">✨</div>
             <h2 className="text-2xl font-semibold mb-4">Fresh Products Coming Soon!</h2>
             <p className="text-muted-foreground">
-              We're constantly adding new and exciting products to our store. 
+              We&apos;re constantly adding new and exciting products to our store. 
               Stay tuned for the latest arrivals in technology, fashion, and lifestyle products.
             </p>
           </div>

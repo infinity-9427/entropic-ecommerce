@@ -62,7 +62,7 @@ export default function BrandTickerDemo() {
           <section>
             <h2 className="text-xl font-semibold mb-4">No Hover Pause</h2>
             <p className="text-muted-foreground mb-4">
-              Continuous animation that doesn't pause on hover
+              Continuous animation that doesn&apos;t pause on hover
             </p>
             <BrandTicker pauseOnHover={false} />
           </section>

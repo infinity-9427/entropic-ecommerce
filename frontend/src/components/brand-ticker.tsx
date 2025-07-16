@@ -109,7 +109,7 @@ interface BrandLogoProps {
 }
 
 function BrandLogo({ brand, hasError, onError, onLoad, isMobile = false }: BrandLogoProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [, setIsLoaded] = useState(false);
 
   const handleLoad = () => {
     setIsLoaded(true);

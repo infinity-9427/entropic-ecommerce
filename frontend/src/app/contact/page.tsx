@@ -37,7 +37,7 @@ export default function ContactPage() {
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <h2 className="text-2xl font-semibold mb-6">Send us a Message</h2>
               <p className="text-gray-600">
-                Have a question or need assistance? We'd love to hear from you! 
+                Have a question or need assistance? We&apos;d love to hear from you! 
                 Our customer service team is here to help with any inquiries about 
                 our products, orders, or services.
               </p>

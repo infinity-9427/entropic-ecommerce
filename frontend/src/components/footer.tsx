@@ -78,7 +78,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/deals" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  Today's Deals
+                  Today&apos;s Deals
                 </Link>
               </li>
               <li>

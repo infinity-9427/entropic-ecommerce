@@ -1,36 +1,157 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Entropic E-Commerce Platform
 
-## Getting Started
+A full-stack e-commerce platform built with Next.js frontend and FastAPI/Django backend, featuring data analytics, RAG system, and cloud-native deployment.
 
-First, run the development server:
+## Architecture
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+├── frontend/          # Next.js 15 application with React 19
+├── backend/           # FastAPI/Django REST API
+├── analytics/         # Data analytics and insights
+├── rag-system/        # RAG system for intelligent search
+├── docker/            # Docker configurations
+├── k8s/               # Kubernetes manifests
+└── scripts/           # Development and deployment scripts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- 🛒 **E-Commerce Frontend**: Modern Next.js app with TypeScript, Tailwind CSS, and Zustand state management
+- 🚀 **REST API Backend**: FastAPI/Django backend with authentication, product management, and order processing
+- 📊 **Analytics Dashboard**: Real-time insights and metrics for business intelligence
+- 🤖 **RAG System**: Intelligent product search and recommendations using vector databases
+- 🐳 **Containerized**: Full Docker support with multi-stage builds
+- ☸️ **Kubernetes Ready**: Production-ready Kubernetes manifests
+- 📈 **Monitoring**: Integrated metrics, logging, and observability
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Quick Start
 
-## Learn More
+### Development
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Start all services
+docker-compose up -dev
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Or start individually
+cd frontend && pnpm dev
+cd backend && python -m uvicorn main:app --reload
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Production
 
-## Deploy on Vercel
+```bash
+# Build and deploy
+kubectl apply -f k8s/
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Tech Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Frontend:**
+- Next.js 15 with App Router
+- React 19
+- TypeScript
+- Tailwind CSS
+- Zustand (State Management)
+- Radix UI Components
+
+**Backend:**
+- FastAPI (or Django)
+- PostgreSQL
+- Redis
+- Celery (Background Tasks)
+
+**Analytics:**
+- Python Data Stack (Pandas, NumPy, Matplotlib)
+- Apache Kafka (Event Streaming)
+- ClickHouse (Analytics Database)
+
+**RAG System:**
+- LangChain
+- Vector Database (Pinecone/Chroma)
+- OpenAI/Local LLM
+
+**Infrastructure:**
+- Docker & Docker Compose
+- Kubernetes
+- Nginx (Reverse Proxy)
+- Prometheus & Grafana (Monitoring)
+
+## Development Setup
+
+1. **Prerequisites**
+   ```bash
+   # Required tools
+   - Node.js 18+
+   - Python 3.11+
+   - Docker & Docker Compose
+   - kubectl (for Kubernetes)
+   - pnpm (frontend package manager)
+   ```
+
+2. **Clone and Setup**
+   ```bash
+   git clone <repository-url>
+   cd entropic-ecommerce
+   
+   # Setup frontend
+   cd frontend
+   pnpm install
+   
+   # Setup backend
+   cd ../backend
+   pip install -r requirements.txt
+   ```
+
+3. **Environment Variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+## Project Structure
+
+```
+entropic-ecommerce/
+├── frontend/                 # Next.js Frontend
+│   ├── src/
+│   │   ├── app/             # App Router pages
+│   │   ├── components/      # Reusable components
+│   │   └── lib/             # Utilities and data
+│   ├── public/              # Static assets
+│   └── package.json
+├── backend/                  # FastAPI Backend
+│   ├── app/
+│   │   ├── api/             # API routes
+│   │   ├── models/          # Database models
+│   │   ├── services/        # Business logic
+│   │   └── core/            # Core configuration
+│   └── requirements.txt
+├── analytics/               # Data Analytics
+│   ├── notebooks/           # Jupyter notebooks
+│   ├── dashboards/          # Analytics dashboards
+│   └── etl/                 # Data pipelines
+├── rag-system/              # RAG Implementation
+│   ├── embeddings/          # Vector embeddings
+│   ├── retrieval/           # Information retrieval
+│   └── generation/          # Response generation
+├── docker/                  # Docker configurations
+│   ├── Dockerfile.frontend
+│   ├── Dockerfile.backend
+│   └── docker-compose.yml
+└── k8s/                     # Kubernetes manifests
+    ├── frontend/
+    ├── backend/
+    └── infrastructure/
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details

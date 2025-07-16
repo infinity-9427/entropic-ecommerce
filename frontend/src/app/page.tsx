@@ -11,7 +11,7 @@ export default function Home() {
   const [sortBy, setSortBy] = useState('relevance');
 
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = products.filter((product) => {
+    const filtered = products.filter((product) => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            product.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
@@ -28,7 +28,7 @@ export default function Home() {
           return b.price - a.price;
         case 'relevance':
         default:
-          // Default relevance: match score + alphabetical
+          // Featured/relevance: match score + alphabetical
           const aScore = (product: typeof a) => {
             let score = 0;
             if (searchTerm) {
@@ -57,8 +57,10 @@ export default function Home() {
     });
 
     return filtered;
-  }, [searchTerm, selectedCategory, sortBy]);  return (
-    <div className="min-h-screen bg-background">
+  }, [searchTerm, selectedCategory, sortBy]);
+
+  return (
+    <div className="min-h-screen bg-background w-full">
       <Header 
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -68,9 +70,12 @@ export default function Home() {
         onSortChange={setSortBy}
       />
 
-      <main className="container mx-auto px-4 py-6">
+      {/* Fixed spacer to account for fixed header */}
+      <div className="h-48"></div>
+
+      <main className="container mx-auto px-4 py-6 w-full max-w-7xl">
         {/* Results Count */}
-        <div className="mb-6">
+        <div className="mb-6 w-full">
           <p className="text-sm text-muted-foreground">
             {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? 'result' : 'results'}
             {searchTerm && ` for "${searchTerm}"`}
@@ -78,7 +83,8 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">{filteredAndSortedProducts.map((product) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
+          {filteredAndSortedProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>

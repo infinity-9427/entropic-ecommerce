@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { brands, DEFAULT_BRAND_LOGO, type Brand } from '@/lib/brands';
 import { cn } from '@/lib/utils';
@@ -58,7 +58,7 @@ export function BrandTicker({
   return (
     <div 
       className={cn(
-        "relative w-full overflow-hidden bg-background/50 border-y border-border",
+        "relative w-full overflow-hidden bg-background/50 border-y border-border max-w-full",
         className
       )}
       onMouseEnter={() => pauseOnHover && setIsHovered(true)}

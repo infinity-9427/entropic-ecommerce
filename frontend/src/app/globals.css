@@ -118,6 +118,21 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    /* Prevent layout shift during filter changes */
+    min-width: 100vw;
+    position: relative;
+  }
+  html {
+    overflow-x: hidden;
+    /* Prevent horizontal scrolling */
+    width: 100%;
+  }
+  
+  /* Ensure container doesn't cause shifts */
+  .container {
+    width: 100%;
+    max-width: 100%;
   }
 }
 

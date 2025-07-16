@@ -15,7 +15,7 @@ export default function CartPage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8 pt-40">
           <div className="text-center py-12">
             <h1 className="text-3xl font-bold mb-4">Your Cart is Empty</h1>
             <p className="text-muted-foreground mb-6">
@@ -33,7 +33,7 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pt-40">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Shopping Cart</h1>
           <p className="text-muted-foreground">

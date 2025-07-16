@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -71,9 +71,9 @@ export function ProductFilters({
               <SelectValue placeholder="Best Match" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="relevance">Best Match</SelectItem>
-              <SelectItem value="price-high">Price: High to Low</SelectItem>
+              <SelectItem value="relevance">Featured</SelectItem>
               <SelectItem value="price-low">Price: Low to High</SelectItem>
+              <SelectItem value="price-high">Price: High to Low</SelectItem>
             </SelectContent>
           </Select>
         </div>

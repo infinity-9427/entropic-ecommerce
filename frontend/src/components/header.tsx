@@ -7,11 +7,7 @@ import {
   Heart,
   MapPin,
   Phone,
-  Star,
-  Truck,
-  Gift,
   Search,
-  SlidersHorizontal,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,10 +39,10 @@ export function Header({
   const totalItems = useCartStore((state) => state.getTotalItems());
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-slate-900 shadow-lg">
+    <header className="fixed top-0 left-0 right-0 z-[100] w-full bg-slate-900 shadow-lg backdrop-blur-md">
       {/* Top Bar with Brand Name and Contact Info */}
-      <div className="border-b border-slate-700 bg-slate-800">
-        <div className="container mx-auto px-4 py-2">
+      <div className="border-b border-slate-700 bg-slate-800/95 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-2 max-w-full">
           <div className="flex items-center justify-between">
             {/* Left - Brand Name */}
             <div className="flex items-center">
@@ -148,29 +144,31 @@ export function Header({
       </div>
 
       {/* Brand Ticker */}
-      <div className="border-b border-slate-700">
-        <BrandTicker 
-          className="bg-slate-900 border-y-0 py-2" 
-          speed={25}
-          showGradientMask={false}
-        />
+      <div className="border-b border-slate-700 bg-slate-900/95 backdrop-blur-sm">
+        <div className="w-full max-w-full overflow-hidden">
+          <BrandTicker 
+            className="bg-slate-900/95 border-y-0 py-2 w-full" 
+            speed={25}
+            showGradientMask={false}
+          />
+        </div>
       </div>
 
       {/* Search and Filters Bar */}
-      <div className="bg-slate-900 border-b border-slate-700">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
+      <div className="bg-slate-900/95 border-b border-slate-700 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-3 max-w-full">
+          <div className="flex items-center justify-between gap-4 w-full min-w-0">
             {/* Category Filter - Left */}
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-300 font-medium">Category:</span>
+            <div className="flex items-center space-x-2 flex-shrink-0 min-w-0">
+              <span className="text-sm text-gray-300 font-medium whitespace-nowrap">Category:</span>
               <Select
                 value={selectedCategory}
                 onValueChange={onCategoryChange}
               >
-                <SelectTrigger className="w-40 bg-slate-800 border-slate-600 text-white text-sm">
-                  <SelectValue placeholder="All Categories" />
+                <SelectTrigger className="w-36 bg-slate-800 border-slate-600 text-white text-sm flex-shrink-0">
+                  <SelectValue placeholder="All" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
+                <SelectContent className="bg-slate-800 border-slate-600 z-[200]">
                   {categories.map((category) => (
                     <SelectItem 
                       key={category} 
@@ -185,9 +183,9 @@ export function Header({
             </div>
 
             {/* Search Bar - Center */}
-            <div className="flex-1 max-w-2xl">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <div className="flex-1 max-w-2xl min-w-0 mx-4">
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
                 <Input
                   type="text"
                   placeholder="Search for products, brands and more..."
@@ -198,7 +196,7 @@ export function Header({
                 {searchTerm && (
                   <button
                     onClick={() => onSearchChange?.('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors z-10"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -207,21 +205,19 @@ export function Header({
             </div>
 
             {/* Sort Filter - Right */}
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-300 font-medium">Sort:</span>
+            <div className="flex items-center space-x-2 flex-shrink-0 min-w-0">
+              <span className="text-sm text-gray-300 font-medium whitespace-nowrap">Sort:</span>
               <Select
                 value={sortBy}
                 onValueChange={onSortChange}
               >
-                <SelectTrigger className="w-36 bg-slate-800 border-slate-600 text-white text-sm">
-                  <SelectValue placeholder="Sort by" />
+                <SelectTrigger className="w-40 bg-slate-800 border-slate-600 text-white text-sm flex-shrink-0">
+                  <SelectValue placeholder="Sort" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  <SelectItem value="relevance" className="text-white hover:bg-slate-700">Relevance</SelectItem>
+                <SelectContent className="bg-slate-800 border-slate-600 z-[200]">
+                  <SelectItem value="relevance" className="text-white hover:bg-slate-700">Featured</SelectItem>
                   <SelectItem value="price-low" className="text-white hover:bg-slate-700">Price: Low to High</SelectItem>
                   <SelectItem value="price-high" className="text-white hover:bg-slate-700">Price: High to Low</SelectItem>
-                  <SelectItem value="rating" className="text-white hover:bg-slate-700">Customer Rating</SelectItem>
-                  <SelectItem value="newest" className="text-white hover:bg-slate-700">Newest First</SelectItem>
                 </SelectContent>
               </Select>
             </div>

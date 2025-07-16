@@ -124,8 +124,7 @@ export function Header({
                     <span className="text-xs">Cart</span>
                     {totalItems > 0 && (
                       <Badge
-                        variant="destructive"
-                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs"
+                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs bg-blue-500 hover:bg-blue-600 text-white font-medium border-0"
                       >
                         {totalItems}
                       </Badge>

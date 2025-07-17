@@ -48,9 +48,9 @@ export function Header({
             <div className="flex items-center">
               <Link
                 href="/"
-                className="flex items-center space-x-3"
+                className="flex items-center space-x-3 group"
               >
-                <span className="font-bold text-2xl bg-gradient-to-r from-blue-400 via-purple-400 to-blue-600 bg-clip-text text-transparent drop-shadow-lg tracking-wide">
+                <span className="font-bold text-2xl bg-gradient-to-r from-blue-400 via-purple-400 to-blue-600 bg-clip-text text-transparent drop-shadow-lg tracking-wide transition-all duration-300 group-hover:from-blue-300 group-hover:via-purple-300 group-hover:to-blue-400 group-hover:drop-shadow-xl">
                   Entropic
                 </span>
               </Link>
@@ -149,6 +149,7 @@ export function Header({
             className="bg-slate-900/95 border-y-0 py-2 w-full" 
             speed={25}
             showGradientMask={false}
+            pauseOnHover={false}
           />
         </div>
       </div>
@@ -164,7 +165,7 @@ export function Header({
                 value={selectedCategory}
                 onValueChange={onCategoryChange}
               >
-                <SelectTrigger className="w-36 bg-slate-800 border-slate-600 text-white text-sm flex-shrink-0">
+                <SelectTrigger className="w-36 bg-slate-800 border-slate-600 text-white text-sm flex-shrink-0 shadow-none focus:shadow-none focus-visible:shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 outline-none">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600 z-[200]">
@@ -210,7 +211,7 @@ export function Header({
                 value={sortBy}
                 onValueChange={onSortChange}
               >
-                <SelectTrigger className="w-40 bg-slate-800 border-slate-600 text-white text-sm flex-shrink-0">
+                <SelectTrigger className="w-40 bg-slate-800 border-slate-600 text-white text-sm flex-shrink-0 shadow-none focus:shadow-none focus-visible:shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 outline-none">
                   <SelectValue placeholder="Sort" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600 z-[200]">

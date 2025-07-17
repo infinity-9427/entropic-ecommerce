@@ -169,3 +169,165 @@ coverage.xml
 test-results/
 screenshots/
 videos/
+
+# AWS and Cloud Deployment
+.aws/
+aws-config/
+*.pem
+*.key
+*.crt
+*.p12
+.terraform/
+*.tfstate
+*.tfstate.backup
+terraform.tfvars
+.pulumi/
+
+# Secrets and Credentials
+secrets/
+credentials/
+config/secrets/
+*.secret
+*_rsa
+*_rsa.pub
+jwt-secret
+api-keys.json
+service-account.json
+gcp-credentials.json
+
+# Production Configuration Files
+docker-compose.prod.yml
+.env.production
+.env.staging
+.env.local
+production.env
+staging.env
+config.prod.json
+settings.prod.py
+
+# SSL Certificates
+ssl/
+certs/
+*.pem
+*.csr
+*.key
+*.crt
+*.p7b
+*.p7c
+*.pfx
+
+# Database Dumps and Backups
+*.sql
+*.dump
+*.backup
+backups/
+db-dumps/
+migrations/versions/*.py
+!migrations/versions/__init__.py
+
+# Payment and API Keys
+stripe-keys.json
+paypal-config.json
+payment-secrets/
+api-secrets/
+
+# Monitoring and Analytics Secrets
+sentry.properties
+newrelic.ini
+datadog.yaml
+monitoring-config/
+
+# CI/CD Secrets
+.github/secrets/
+deploy-keys/
+github-deploy-key
+gitlab-deploy-key
+
+# Local Development
+.local/
+local-config/
+dev-data/
+test-data/
+sample-data/
+mock-data/
+
+# File Uploads and User Content
+uploads/
+user-uploads/
+media/user-media/
+static/uploads/
+public/uploads/
+storage/
+
+# Cache Directories
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Editor and IDE specific
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries/
+.idea/shelf/
+*.sublime-project
+*.sublime-workspace
+
+# Performance and Profiling
+profile/
+.prof
+*.cpuprofile
+*.heapsnapshot
+
+# Docker Development
+docker-compose.override.yml
+.docker/
+docker-data/
+volumes/
+
+# Kubernetes Local
+k8s/secrets/
+k8s/configmaps/local/
+k8s/local/
+*.kubeconfig
+
+# Analytics and Data
+analytics-data/
+reports/
+exports/
+metrics-data/
+clickhouse-data/
+redis-data/
+postgres-data/
+
+# Temporary Build Files
+.turbo/
+.swc/
+.next/cache/
+.nuxt/
+.output/
+
+# Mobile Development (if you add mobile later)
+ios/
+android/
+*.ipa
+*.apk
+*.aab
+
+# Misc Security
+.htpasswd
+.htaccess
+robots.txt.bak
+sitemap.xml.bak
+
+
+# docs
+MVP_BUDGET_DEPLOYMENT.md
+PRODUCTION_ROADMAP.md

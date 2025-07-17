@@ -72,8 +72,8 @@ export function ProductFilters({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="relevance">Featured</SelectItem>
-              <SelectItem value="price-low">Price: Low to High</SelectItem>
-              <SelectItem value="price-high">Price: High to Low</SelectItem>
+              <SelectItem value="price-low">Low to High</SelectItem>
+              <SelectItem value="price-high">High to Low</SelectItem>
             </SelectContent>
           </Select>
         </div>

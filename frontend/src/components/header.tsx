@@ -215,8 +215,8 @@ export function Header({
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600 z-[200]">
                   <SelectItem value="relevance" className="text-white hover:bg-slate-700">Featured</SelectItem>
-                  <SelectItem value="price-low" className="text-white hover:bg-slate-700">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high" className="text-white hover:bg-slate-700">Price: High to Low</SelectItem>
+                  <SelectItem value="price-low" className="text-white hover:bg-slate-700">Low to High</SelectItem>
+                  <SelectItem value="price-high" className="text-white hover:bg-slate-700">High to Low</SelectItem>
                 </SelectContent>
               </Select>
             </div>

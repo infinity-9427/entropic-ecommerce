@@ -10,8 +10,10 @@ import uuid
 
 try:
     from . import models, schemas, auth
+    from .cloudinary_service import cloudinary_service
 except ImportError:
     import models, schemas, auth
+    from cloudinary_service import cloudinary_service
 
 
 class UserService:
@@ -83,12 +85,63 @@ class ProductService:
         self.db.refresh(db_product)
         return db_product
 
+    def update_product_cloudinary_id(self, product_id: int, public_id: Optional[str]) -> Optional[models.Product]:
+        db_product = self.get_product(product_id)
+        if not db_product:
+            return None
+        
+        # Update using SQLAlchemy update method
+        self.db.query(models.Product).filter(models.Product.id == product_id).update({
+            models.Product.cloudinary_public_id: public_id
+        })
+        self.db.commit()
+        self.db.refresh(db_product)
+        return db_product
+
     def delete_product(self, product_id: int) -> bool:
         db_product = self.get_product(product_id)
         if not db_product:
             return False
         
-        db_product.is_active = False
+        # Store the public_id before deletion
+        public_id = getattr(db_product, 'cloudinary_public_id', None)
+        
+        # Delete image from Cloudinary if it exists
+        if public_id:
+            try:
+                cloudinary_service.delete_image(public_id)
+                print(f"Deleted Cloudinary image: {public_id}")
+            except Exception as e:
+                print(f"Failed to delete Cloudinary image: {str(e)}")
+        
+        # Soft delete the product
+        self.db.query(models.Product).filter(models.Product.id == product_id).update({
+            models.Product.is_active: False
+        })
+        self.db.commit()
+        return True
+
+    def hard_delete_product(self, product_id: int) -> bool:
+        """
+        Permanently delete a product and its associated Cloudinary image
+        """
+        db_product = self.get_product(product_id)
+        if not db_product:
+            return False
+        
+        # Store the public_id before deletion
+        public_id = getattr(db_product, 'cloudinary_public_id', None)
+        
+        # Delete image from Cloudinary if it exists
+        if public_id:
+            try:
+                cloudinary_service.delete_image(public_id)
+                print(f"Deleted Cloudinary image: {public_id}")
+            except Exception as e:
+                print(f"Failed to delete Cloudinary image: {str(e)}")
+        
+        # Hard delete the product
+        self.db.delete(db_product)
         self.db.commit()
         return True
 
@@ -120,7 +173,13 @@ class CartService:
         ).first()
 
         if existing_item:
-            existing_item.quantity += quantity
+            # Update quantity using SQLAlchemy update method
+            self.db.query(models.CartItem).filter(
+                models.CartItem.user_id == user_id,
+                models.CartItem.product_id == product_id
+            ).update({
+                models.CartItem.quantity: models.CartItem.quantity + quantity
+            })
             self.db.commit()
             self.db.refresh(existing_item)
             return existing_item
@@ -144,7 +203,13 @@ class CartService:
         if not cart_item:
             return None
         
-        cart_item.quantity = quantity
+        # Update quantity using SQLAlchemy update method
+        self.db.query(models.CartItem).filter(
+            models.CartItem.user_id == user_id,
+            models.CartItem.product_id == product_id
+        ).update({
+            models.CartItem.quantity: quantity
+        })
         self.db.commit()
         self.db.refresh(cart_item)
         return cart_item

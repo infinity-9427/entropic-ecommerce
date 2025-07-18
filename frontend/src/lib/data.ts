@@ -1,10 +1,15 @@
 export interface Product {
-  id: string;
+  id: string | number;
   name: string;
   price: number;
   category: string;
   image: string;
+  image_url?: string;
+  images?: Array<{ url: string; public_id: string }>;
   description: string;
+  stock_quantity?: number;
+  is_active?: boolean;
+  created_at?: string;
 }
 
 export const products: Product[] = [

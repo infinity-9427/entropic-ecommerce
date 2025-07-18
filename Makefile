@@ -1,210 +1,257 @@
-# Entropic E-commerce Platform Makefile
-# Quick commands for development and deployment
+# Entropic E-commerce Makefile
+# Comprehensive build and development commands
 
-.PHONY: help setup dev build test clean deploy-local deploy-k8s
+.PHONY: help setup build dev test clean deploy down logs restart status
 
 # Default target
 help:
-	@echo "🚀 Entropic E-commerce Platform"
-	@echo "==============================="
+	@echo "🚀 Entropic E-commerce - Available Commands"
+	@echo "===========================================" 
 	@echo ""
-	@echo "Available commands:"
+	@echo "🏗️  Setup & Installation:"
+	@echo "  make setup          - Install all dependencies and setup environment"
+	@echo "  make setup-backend  - Setup backend Python environment"
+	@echo "  make setup-frontend - Setup frontend Node.js environment"
 	@echo ""
-	@echo "Development:"
-	@echo "  setup         Setup development environment"
-	@echo "  dev           Start development servers"
-	@echo "  frontend      Start frontend development server"
-	@echo "  backend       Start backend development server"
-	@echo "  analytics     Start analytics dashboard"
-	@echo "  rag           Start RAG system"
+	@echo "🚀 Development:"
+	@echo "  make dev            - Start development servers (interactive)"
+	@echo "  make dev-backend    - Start backend development server"
+	@echo "  make dev-frontend   - Start frontend development server"
+	@echo "  make dev-db         - Start database services only"
 	@echo ""
-	@echo "Building:"
-	@echo "  build         Build all Docker images"
-	@echo "  build-frontend Build frontend Docker image"
-	@echo "  build-backend  Build backend Docker image"
+	@echo "🏗️  Build & Deploy:"
+	@echo "  make build          - Build all Docker images"
+	@echo "  make deploy         - Deploy to production (with health checks)"
+	@echo "  make deploy-dev     - Deploy development environment"
 	@echo ""
-	@echo "Testing:"
-	@echo "  test          Run all tests"
-	@echo "  test-frontend Run frontend tests"
-	@echo "  test-backend  Run backend tests"
+	@echo "🔍 Monitoring:"
+	@echo "  make logs           - View all service logs"
+	@echo "  make logs-backend   - View backend logs"
+	@echo "  make logs-frontend  - View frontend logs"
+	@echo "  make logs-db        - View database logs"
+	@echo "  make status         - Show service status"
 	@echo ""
-	@echo "Deployment:"
-	@echo "  deploy-local  Deploy with Docker Compose"
-	@echo "  deploy-k8s    Deploy to Kubernetes"
-	@echo "  stop-local    Stop local deployment"
+	@echo "🧪 Testing:"
+	@echo "  make test           - Run all tests"
+	@echo "  make test-backend   - Run backend tests"
+	@echo "  make test-frontend  - Run frontend tests"
 	@echo ""
-	@echo "Utilities:"
-	@echo "  clean         Clean up build artifacts"
-	@echo "  logs          Show Docker logs"
-	@echo "  shell-backend Shell into backend container"
-	@echo "  db-migrate    Run database migrations"
+	@echo "🧹 Cleanup:"
+	@echo "  make clean          - Interactive cleanup menu"
+	@echo "  make clean-all      - Clean all build artifacts"
+	@echo "  make clean-docker   - Clean Docker resources"
+	@echo "  make down           - Stop all services"
+	@echo "  make restart        - Restart all services"
+	@echo ""
 
-# Setup development environment
-setup:
-	@echo "🔧 Setting up development environment..."
-	./scripts/setup-dev.sh
+# =============================================================================
+# Setup Commands
+# =============================================================================
 
-# Development commands
+setup: setup-backend setup-frontend
+	@echo "✅ Full setup completed!"
+
+setup-backend:
+	@echo "🐍 Setting up backend environment..."
+	@cd backend && python -m venv .venv || python3 -m venv .venv
+	@cd backend && source .venv/bin/activate && pip install -r requirements.txt || pip install -e .
+	@echo "✅ Backend setup completed!"
+
+setup-frontend:
+	@echo "📦 Setting up frontend environment..."
+	@cd frontend && npm install
+	@echo "✅ Frontend setup completed!"
+
+# =============================================================================
+# Development Commands
+# =============================================================================
+
 dev:
-	@echo "🚀 Starting all development servers..."
-	@echo "Frontend will be available at http://localhost:3000"
-	@echo "Backend will be available at http://localhost:8000"
-	@echo "Press Ctrl+C to stop all servers"
-	@make -j4 frontend backend analytics rag
+	@echo "🚀 Starting development servers..."
+	@./scripts/dev-start.sh
 
-frontend:
-	@echo "🎨 Starting frontend development server..."
-	cd frontend && pnpm dev
+dev-backend:
+	@echo "🐍 Starting backend development server..."
+	@cd backend && source .venv/bin/activate && uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-backend:
-	@echo "🔧 Starting backend development server..."
-	cd backend && python main.py
+dev-frontend:
+	@echo "📦 Starting frontend development server..."
+	@cd frontend && npm run dev
 
-analytics:
-	@echo "📊 Starting analytics dashboard..."
-	cd analytics && streamlit run dashboards/streamlit_dashboard.py --server.port 8501
+dev-db:
+	@echo "🗄️  Starting database services..."
+	@cd docker && docker-compose up -d postgres redis
 
-rag:
-	@echo "🤖 Starting RAG system..."
-	cd rag-system && python main.py
+# =============================================================================
+# Build Commands
+# =============================================================================
 
-# Build commands
 build:
-	@echo "🏗️ Building all Docker images..."
-	./scripts/deploy.sh build
-
-build-frontend:
-	@echo "🏗️ Building frontend Docker image..."
-	docker build -f docker/Dockerfile.frontend -t entropic/frontend:latest .
+	@echo "🏗️  Building all Docker images..."
+	@cd docker && docker-compose build --no-cache
 
 build-backend:
-	@echo "🏗️ Building backend Docker image..."
-	docker build -f docker/Dockerfile.backend -t entropic/backend:latest .
+	@echo "🐍 Building backend Docker image..."
+	@cd docker && docker-compose build --no-cache backend
 
-# Testing commands
+build-frontend:
+	@echo "📦 Building frontend Docker image..."
+	@cd docker && docker-compose build --no-cache frontend
+
+# =============================================================================
+# Deployment Commands
+# =============================================================================
+
+deploy:
+	@echo "🚀 Deploying to production..."
+	@./scripts/deploy-prod.sh
+
+deploy-dev:
+	@echo "🚀 Deploying development environment..."
+	@cd docker && docker-compose up -d
+
+# =============================================================================
+# Monitoring Commands
+# =============================================================================
+
+logs:
+	@echo "📋 Viewing all service logs..."
+	@cd docker && docker-compose logs -f
+
+logs-backend:
+	@echo "📋 Viewing backend logs..."
+	@cd docker && docker-compose logs -f backend
+
+logs-frontend:
+	@echo "📋 Viewing frontend logs..."
+	@cd docker && docker-compose logs -f frontend
+
+logs-db:
+	@echo "📋 Viewing database logs..."
+	@cd docker && docker-compose logs -f postgres
+
+status:
+	@echo "📊 Service status:"
+	@cd docker && docker-compose ps
+
+# =============================================================================
+# Testing Commands
+# =============================================================================
+
 test:
 	@echo "🧪 Running all tests..."
-	@make test-frontend
 	@make test-backend
-
-test-frontend:
-	@echo "🧪 Running frontend tests..."
-	cd frontend && pnpm test
+	@make test-frontend
 
 test-backend:
 	@echo "🧪 Running backend tests..."
-	cd backend && python -m pytest
+	@cd backend && source .venv/bin/activate && python -m pytest tests/ -v
 
-# Deployment commands
-deploy-local:
-	@echo "🐳 Deploying with Docker Compose..."
-	./scripts/deploy.sh start
+test-frontend:
+	@echo "🧪 Running frontend tests..."
+	@cd frontend && npm test
 
-deploy-k8s:
-	@echo "☸️ Deploying to Kubernetes..."
-	./scripts/deploy.sh deploy
+# =============================================================================
+# Cleanup Commands
+# =============================================================================
 
-stop-local:
-	@echo "🛑 Stopping local deployment..."
-	./scripts/deploy.sh stop
-
-# Database commands
-db-migrate:
-	@echo "📊 Running database migrations..."
-	cd backend && alembic upgrade head
-
-db-reset:
-	@echo "🗄️ Resetting database..."
-	cd backend && alembic downgrade base && alembic upgrade head
-
-# Utility commands
 clean:
-	@echo "🧹 Cleaning up build artifacts..."
-	./scripts/deploy.sh cleanup
-	cd frontend && rm -rf .next out node_modules/.cache
-	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	find . -type f -name "*.pyc" -delete
+	@echo "🧹 Starting interactive cleanup..."
+	@./scripts/cleanup.sh
 
-logs:
-	@echo "📋 Showing Docker logs..."
-	docker-compose -f docker/docker-compose.yml logs -f
+clean-all:
+	@echo "🧹 Cleaning all build artifacts..."
+	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
+	@cd frontend && rm -rf node_modules .next 2>/dev/null || true
+	@echo "✅ Build artifacts cleaned!"
+
+clean-docker:
+	@echo "🧹 Cleaning Docker resources..."
+	@cd docker && docker-compose down -v --remove-orphans
+	@docker system prune -f
+	@echo "✅ Docker resources cleaned!"
+
+down:
+	@echo "⏹️  Stopping all services..."
+	@cd docker && docker-compose down
+
+restart:
+	@echo "🔄 Restarting all services..."
+	@cd docker && docker-compose restart
+
+# =============================================================================
+# Utility Commands
+# =============================================================================
 
 shell-backend:
-	@echo "🐚 Opening shell in backend container..."
-	docker-compose -f docker/docker-compose.yml exec backend /bin/bash
+	@echo "🐍 Opening backend shell..."
+	@cd docker && docker-compose exec backend bash
 
-shell-frontend:
-	@echo "🐚 Opening shell in frontend container..."
-	docker-compose -f docker/docker-compose.yml exec frontend /bin/sh
+shell-db:
+	@echo "🗄️  Opening database shell..."
+	@cd docker && docker-compose exec postgres psql -U entropic -d entropic_ecommerce
 
-# Install dependencies
-install:
-	@echo "📦 Installing all dependencies..."
-	cd frontend && pnpm install
-	cd backend && pip install -e .
-	cd analytics && pip install -e .
-	cd rag-system && pip install -e .
+health:
+	@echo "🏥 Health check..."
+	@curl -f http://localhost:8000/health || echo "Backend not responding"
+	@curl -f http://localhost:3000 || echo "Frontend not responding"
 
-# Format code
-format:
-	@echo "✨ Formatting code..."
-	cd frontend && pnpm run prettier
-	cd backend && black . && isort .
-	cd analytics && black . && isort .
-	cd rag-system && black . && isort .
+# =============================================================================
+# Database Commands
+# =============================================================================
 
-# Lint code
-lint:
-	@echo "🔍 Linting code..."
-	cd frontend && pnpm run lint
-	cd backend && flake8 . && mypy .
-	cd analytics && flake8 . && mypy .
-	cd rag-system && flake8 . && mypy .
+db-migrate:
+	@echo "🗄️  Running database migrations..."
+	@cd docker && docker-compose exec backend python -c "from database import engine; from models import Base; Base.metadata.create_all(bind=engine)"
 
-# Security scan
-security:
-	@echo "🔐 Running security scans..."
-	cd backend && safety check
-	cd analytics && safety check
-	cd rag-system && safety check
+db-reset:
+	@echo "⚠️  Resetting database..."
+	@cd docker && docker-compose down -v
+	@cd docker && docker-compose up -d postgres
+	@sleep 5
+	@make db-migrate
 
-# Generate documentation
+db-backup:
+	@echo "💾 Creating database backup..."
+	@cd docker && docker-compose exec postgres pg_dump -U entropic entropic_ecommerce > backup_$(shell date +%Y%m%d_%H%M%S).sql
+
+# =============================================================================
+# Security Commands
+# =============================================================================
+
+security-check:
+	@echo "🔒 Running security checks..."
+	@cd backend && source .venv/bin/activate && pip install safety bandit
+	@cd backend && source .venv/bin/activate && safety check
+	@cd backend && source .venv/bin/activate && bandit -r .
+	@cd frontend && npm audit
+
+# =============================================================================
+# Performance Commands
+# =============================================================================
+
+performance-test:
+	@echo "⚡ Running performance tests..."
+	@cd docker && docker-compose exec backend python -c "import time; start = time.time(); import main; print(f'Backend startup time: {time.time() - start:.2f}s')"
+
+# =============================================================================
+# Documentation Commands
+# =============================================================================
+
 docs:
 	@echo "📚 Generating documentation..."
-	cd backend && python -c "import uvicorn; uvicorn.run('main:app', host='0.0.0.0', port=8000)" &
-	sleep 5
-	curl -o api-docs.json http://localhost:8000/openapi.json
-	pkill -f uvicorn
+	@cd backend && source .venv/bin/activate && pip install sphinx
+	@cd backend && source .venv/bin/activate && sphinx-build -b html docs/ docs/_build/
 
-# Backup database
-backup:
-	@echo "💾 Creating database backup..."
-	docker-compose -f docker/docker-compose.yml exec postgres pg_dump -U entropic_user entropic_db > backup_$(shell date +%Y%m%d_%H%M%S).sql
+# =============================================================================
+# Environment Commands
+# =============================================================================
 
-# Restore database
-restore:
-	@echo "📥 Restoring database from backup..."
-	@read -p "Enter backup file path: " backup_file; \
-	docker-compose -f docker/docker-compose.yml exec -T postgres psql -U entropic_user entropic_db < $$backup_file
-
-# Monitor services
-monitor:
-	@echo "📊 Monitoring services..."
-	watch -n 2 'docker-compose -f docker/docker-compose.yml ps'
-
-# Show system status
-status:
-	@echo "📊 System Status"
-	@echo "==============="
-	@echo ""
-	@echo "Docker Containers:"
-	@docker-compose -f docker/docker-compose.yml ps
-	@echo ""
-	@echo "Kubernetes Pods:"
-	@kubectl get pods -n entropic 2>/dev/null || echo "Kubernetes not available"
-	@echo ""
-	@echo "Disk Usage:"
-	@df -h . | tail -1
-	@echo ""
-	@echo "Memory Usage:"
-	@free -h | grep Mem
+env-check:
+	@echo "🔍 Checking environment variables..."
+	@echo "Backend .env file:"
+	@test -f backend/.env && echo "✅ Found" || echo "❌ Missing"
+	@echo "Frontend .env.local file:"
+	@test -f frontend/.env.local && echo "✅ Found" || echo "❌ Missing"

@@ -53,13 +53,19 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: Optional[str] = None
 
+# Image schema for product images
+class ProductImage(BaseModel):
+    url: str
+    public_id: str
+
 # Product schemas
 class ProductBase(BaseModel):
     name: str
     description: Optional[str] = None
     price: float = Field(..., gt=0)
     category: str
-    image_url: Optional[str] = None
+    image_url: Optional[str] = None  # Primary image URL (for backward compatibility)
+    images: Optional[List[ProductImage]] = None  # Array of image objects
     stock_quantity: int = Field(..., ge=0)
 
 class ProductCreate(ProductBase):
@@ -71,6 +77,7 @@ class ProductUpdate(BaseModel):
     price: Optional[float] = Field(None, gt=0)
     category: Optional[str] = None
     image_url: Optional[str] = None
+    images: Optional[List[ProductImage]] = None
     stock_quantity: Optional[int] = Field(None, ge=0)
     is_active: Optional[bool] = None
 
@@ -81,6 +88,19 @@ class ProductResponse(ProductBase):
     updated_at: datetime
     
     model_config = ConfigDict(from_attributes=True)
+
+# Image upload schemas
+class ImageUploadResponse(BaseModel):
+    public_id: str
+    original_url: str
+    thumbnail_url: str
+    medium_url: str
+    large_url: str
+    format: str
+    width: int
+    height: int
+    bytes: int
+    created_at: str
 
 # Cart schemas
 class CartItemBase(BaseModel):

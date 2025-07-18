@@ -44,7 +44,8 @@ class Product(Base):
     description = Column(Text)
     price = Column(Float, nullable=False)
     category = Column(String, nullable=False, index=True)
-    image_url = Column(String)
+    image_url = Column(String)  # Primary image URL (for backward compatibility)
+    images = Column(JSON)  # Array of image objects with url and public_id
     stock_quantity = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)

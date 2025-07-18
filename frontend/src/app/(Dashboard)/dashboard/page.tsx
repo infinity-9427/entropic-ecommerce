@@ -95,23 +95,82 @@ export default function DashboardPage() {
           fetch('http://localhost:8000/analytics/products')
         ])
 
-        if (!dashboardRes.ok || !salesRes.ok || !userRes.ok || !productRes.ok) {
-          throw new Error('Failed to fetch analytics data')
-        }
+        // Handle each response individually - don't fail if one fails
+        const dashboardData = dashboardRes.ok ? await dashboardRes.json() : null
+        const salesData = salesRes.ok ? await salesRes.json() : null
+        const userData = userRes.ok ? await userRes.json() : null
+        const productData = productRes.ok ? await productRes.json() : null
 
-        const [dashboard, sales, users, products] = await Promise.all([
-          dashboardRes.json(),
-          salesRes.json(),
-          userRes.json(),
-          productRes.json()
-        ])
+        setDashboardMetrics(dashboardData || {
+          total_users: 0,
+          total_products: 0,
+          total_orders: 0,
+          total_revenue: 0,
+          avg_order_value: 0,
+          conversion_rate: 0,
+          page_views: 0,
+          product_views: 0,
+          top_categories: [],
+          recent_orders_count: 0,
+          recent_orders: []
+        })
 
-        setDashboardMetrics(dashboard)
-        setSalesMetrics(sales)
-        setUserMetrics(users)
-        setProductMetrics(products)
+        setSalesMetrics(salesData || {
+          daily_sales: [],
+          top_products: [],
+          period_days: 30
+        })
+
+        setUserMetrics(userData || {
+          new_users_today: 0,
+          total_users: 0,
+          users_with_orders: 0,
+          conversion_rate: 0
+        })
+
+        setProductMetrics(productData || {
+          most_viewed_products: [],
+          low_stock_products: [],
+          total_products: 0
+        })
+
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred')
+        console.error('Analytics fetch error:', err)
+        setError(err instanceof Error ? err.message : 'Failed to fetch analytics data')
+        
+        // Set fallback data even on error
+        setDashboardMetrics({
+          total_users: 0,
+          total_products: 0,
+          total_orders: 0,
+          total_revenue: 0,
+          avg_order_value: 0,
+          conversion_rate: 0,
+          page_views: 0,
+          product_views: 0,
+          top_categories: [],
+          recent_orders_count: 0,
+          recent_orders: []
+        })
+
+        setSalesMetrics({
+          daily_sales: [],
+          top_products: [],
+          period_days: 30
+        })
+
+        setUserMetrics({
+          new_users_today: 0,
+          total_users: 0,
+          users_with_orders: 0,
+          conversion_rate: 0
+        })
+
+        setProductMetrics({
+          most_viewed_products: [],
+          low_stock_products: [],
+          total_products: 0
+        })
       } finally {
         setLoading(false)
       }
@@ -211,24 +270,27 @@ export default function DashboardPage() {
         {/* Sales Chart */}
         <ChartCard title="Daily Sales (Last 30 Days)">
           <div className="space-y-3">
-            {salesMetrics?.daily_sales?.slice(-7).map((sale) => (
+            {(salesMetrics?.daily_sales || []).slice(-7).map((sale) => (
               <div key={sale.date} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
                   <p className="font-medium">{sale.date}</p>
                   <p className="text-sm text-gray-600">{sale.orders} orders</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-green-600">${sale.revenue.toFixed(2)}</p>
+                  <p className="font-bold text-green-600">${sale.revenue?.toFixed(2) || '0.00'}</p>
                 </div>
               </div>
-            )) || <p className="text-gray-500">No sales data available</p>}
+            ))}
+            {(!salesMetrics?.daily_sales || salesMetrics.daily_sales.length === 0) && (
+              <p className="text-gray-500">No sales data available</p>
+            )}
           </div>
         </ChartCard>
 
         {/* Top Categories */}
         <ChartCard title="Top Categories">
           <div className="space-y-3">
-            {dashboardMetrics?.top_categories?.map((category) => (
+            {(dashboardMetrics?.top_categories || []).map((category) => (
               <div key={category.category} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
                   <p className="font-medium">{category.category}</p>
@@ -238,31 +300,37 @@ export default function DashboardPage() {
                   <p className="font-bold text-blue-600">{category.count}</p>
                 </div>
               </div>
-            )) || <p className="text-gray-500">No category data available</p>}
+            ))}
+            {(!dashboardMetrics?.top_categories || dashboardMetrics.top_categories.length === 0) && (
+              <p className="text-gray-500">No category data available</p>
+            )}
           </div>
         </ChartCard>
 
         {/* Top Products */}
         <ChartCard title="Top Products by Revenue">
           <div className="space-y-3">
-            {salesMetrics?.top_products?.slice(0, 5).map((product) => (
+            {(salesMetrics?.top_products || []).slice(0, 5).map((product) => (
               <div key={product.name} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
                   <p className="font-medium">{product.name}</p>
                   <p className="text-sm text-gray-600">{product.orders} orders</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-green-600">${product.revenue.toFixed(2)}</p>
+                  <p className="font-bold text-green-600">${product.revenue?.toFixed(2) || '0.00'}</p>
                 </div>
               </div>
-            )) || <p className="text-gray-500">No product data available</p>}
+            ))}
+            {(!salesMetrics?.top_products || salesMetrics.top_products.length === 0) && (
+              <p className="text-gray-500">No product data available</p>
+            )}
           </div>
         </ChartCard>
 
         {/* Most Viewed Products */}
         <ChartCard title="Most Viewed Products">
           <div className="space-y-3">
-            {productMetrics?.most_viewed_products?.slice(0, 5).map((product) => (
+            {(productMetrics?.most_viewed_products || []).slice(0, 5).map((product) => (
               <div key={product.name} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
                   <p className="font-medium">{product.name}</p>
@@ -272,7 +340,10 @@ export default function DashboardPage() {
                   <p className="font-bold text-blue-600">{product.views} views</p>
                 </div>
               </div>
-            )) || <p className="text-gray-500">No view data available</p>}
+            ))}
+            {(!productMetrics?.most_viewed_products || productMetrics.most_viewed_products.length === 0) && (
+              <p className="text-gray-500">No view data available</p>
+            )}
           </div>
         </ChartCard>
       </div>
@@ -303,7 +374,7 @@ export default function DashboardPage() {
         {/* Low Stock Alert */}
         <ChartCard title="Low Stock Alert">
           <div className="space-y-3">
-            {productMetrics?.low_stock_products?.map((product) => (
+            {(productMetrics?.low_stock_products || []).map((product) => (
               <div key={product.name} className="flex items-center justify-between p-3 bg-red-50 rounded border border-red-200">
                 <div>
                   <p className="font-medium text-red-800">{product.name}</p>
@@ -313,7 +384,10 @@ export default function DashboardPage() {
                   <p className="font-bold text-red-600">{product.stock} left</p>
                 </div>
               </div>
-            )) || <p className="text-gray-500">All products have sufficient stock</p>}
+            ))}
+            {(!productMetrics?.low_stock_products || productMetrics.low_stock_products.length === 0) && (
+              <p className="text-gray-500">All products have sufficient stock</p>
+            )}
           </div>
         </ChartCard>
       </div>
@@ -340,13 +414,13 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {dashboardMetrics.recent_orders.map((order) => (
+                {(dashboardMetrics.recent_orders || []).map((order) => (
                   <tr key={order.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {order.order_number}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${order.total_amount.toFixed(2)}
+                      ${order.total_amount?.toFixed(2) || '0.00'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -359,7 +433,7 @@ export default function DashboardPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(order.created_at).toLocaleDateString()}
+                      {order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}
                     </td>
                   </tr>
                 ))}

@@ -1,196 +1,320 @@
 #!/bin/bash
 
-# Development setup script for Entropic E-commerce Platform
-# This script sets up the development environment
+# Entropic E-commerce Development Environment Setup
+# This script sets up the complete development environment
 
 set -e
 
-echo "🚀 Setting up Entropic E-commerce Development Environment"
-echo "=================================================="
+echo "🔧 Entropic E-commerce Development Environment Setup"
+echo "====================================================="
 
-# Check if required tools are installed
-check_requirements() {
-    echo "📋 Checking requirements..."
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_status() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_info() {
+    echo -e "${BLUE}ℹ️  $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
+# Function to check if command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Function to check prerequisites
+check_prerequisites() {
+    print_info "Checking prerequisites..."
     
-    # Check Node.js
-    if ! command -v node &> /dev/null; then
-        echo "❌ Node.js is not installed. Please install Node.js 18+ first."
+    # Check Docker
+    if command_exists docker; then
+        print_status "Docker is installed"
+    else
+        print_error "Docker is not installed. Please install Docker first."
         exit 1
     fi
     
-    # Check pnpm
-    if ! command -v pnpm &> /dev/null; then
-        echo "📦 Installing pnpm..."
-        npm install -g pnpm
+    # Check Docker Compose
+    if command_exists docker-compose; then
+        print_status "Docker Compose is installed"
+    else
+        print_error "Docker Compose is not installed. Please install Docker Compose first."
+        exit 1
+    fi
+    
+    # Check Node.js
+    if command_exists node; then
+        NODE_VERSION=$(node --version)
+        print_status "Node.js is installed ($NODE_VERSION)"
+    else
+        print_warning "Node.js is not installed. Some features may not work in local development."
     fi
     
     # Check Python
-    if ! command -v python3 &> /dev/null; then
-        echo "❌ Python 3 is not installed. Please install Python 3.11+ first."
-        exit 1
+    if command_exists python3; then
+        PYTHON_VERSION=$(python3 --version)
+        print_status "Python is installed ($PYTHON_VERSION)"
+    else
+        print_warning "Python is not installed. Some features may not work in local development."
     fi
     
-    # Check Docker
-    if ! command -v docker &> /dev/null; then
-        echo "⚠️  Docker is not installed. Some features will not be available."
+    # Check Make
+    if command_exists make; then
+        print_status "Make is installed"
+    else
+        print_warning "Make is not installed. You'll need to run commands manually."
     fi
-    
-    echo "✅ Requirements check completed"
 }
 
-# Setup frontend
-setup_frontend() {
-    echo "🎨 Setting up frontend..."
-    cd frontend
-    
-    echo "📦 Installing frontend dependencies..."
-    pnpm install
-    
-    echo "🏗️  Building frontend..."
-    pnpm build
-    
-    cd ..
-    echo "✅ Frontend setup completed"
-}
-
-# Setup backend
+# Function to setup backend environment
 setup_backend() {
-    echo "🔧 Setting up backend..."
+    print_info "Setting up backend environment..."
+    
     cd backend
     
-    echo "🐍 Creating Python virtual environment..."
-    python3 -m venv venv
-    source venv/bin/activate
+    # Create virtual environment
+    if [ ! -d ".venv" ]; then
+        print_info "Creating Python virtual environment..."
+        python3 -m venv .venv
+        print_status "Virtual environment created"
+    else
+        print_status "Virtual environment already exists"
+    fi
     
-    echo "📦 Installing backend dependencies..."
-    pip install -e .
+    # Activate virtual environment and install dependencies
+    print_info "Installing Python dependencies..."
+    source .venv/bin/activate
     
-    cd ..
-    echo "✅ Backend setup completed"
-}
-
-# Setup analytics
-setup_analytics() {
-    echo "📊 Setting up analytics..."
-    cd analytics
+    # Check if requirements.txt exists
+    if [ -f "requirements.txt" ]; then
+        pip install -r requirements.txt
+        print_status "Requirements installed from requirements.txt"
+    elif [ -f "pyproject.toml" ]; then
+        pip install -e .
+        print_status "Package installed from pyproject.toml"
+    else
+        print_warning "No requirements.txt or pyproject.toml found. Installing basic dependencies..."
+        pip install fastapi uvicorn sqlalchemy psycopg2-binary redis python-multipart
+        print_status "Basic dependencies installed"
+    fi
     
-    echo "🐍 Creating Python virtual environment..."
-    python3 -m venv venv
-    source venv/bin/activate
-    
-    echo "📦 Installing analytics dependencies..."
-    pip install -e .
-    
-    cd ..
-    echo "✅ Analytics setup completed"
-}
-
-# Setup RAG system
-setup_rag() {
-    echo "🤖 Setting up RAG system..."
-    cd rag-system
-    
-    echo "🐍 Creating Python virtual environment..."
-    python3 -m venv venv
-    source venv/bin/activate
-    
-    echo "📦 Installing RAG system dependencies..."
-    pip install -e .
-    
-    cd ..
-    echo "✅ RAG system setup completed"
-}
-
-# Create environment files
-create_env_files() {
-    echo "🔐 Creating environment files..."
-    
-    # Backend .env
-    if [ ! -f backend/.env ]; then
-        cat > backend/.env << EOL
+    # Create .env file if it doesn't exist
+    if [ ! -f ".env" ]; then
+        print_info "Creating backend .env file..."
+        cat > .env << EOF
 # Database
-DATABASE_URL=postgresql://entropic_user:entropic_password@localhost:5432/entropic_db
+DATABASE_URL=postgresql://entropic:password@localhost:5432/entropic_ecommerce
+REDIS_URL=redis://localhost:6379
 
-# Redis
-REDIS_URL=redis://localhost:6379/0
+# Security
+JWT_SECRET_KEY=your-secret-key-here-change-in-production
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
 
-# JWT
-SECRET_KEY=your-secret-key-change-in-production
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+# Cloudinary (optional - for image storage)
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
 
-# Environment
-ENVIRONMENT=development
+# Development
 DEBUG=true
-
-# CORS
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
-EOL
-        echo "📄 Created backend/.env"
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+EOF
+        print_status "Backend .env file created"
+    else
+        print_status "Backend .env file already exists"
     fi
     
-    # Frontend .env.local
-    if [ ! -f frontend/.env.local ]; then
-        cat > frontend/.env.local << EOL
-# API URL
+    cd ..
+}
+
+# Function to setup frontend environment
+setup_frontend() {
+    print_info "Setting up frontend environment..."
+    
+    cd frontend
+    
+    # Install dependencies
+    if [ -f "package.json" ]; then
+        print_info "Installing Node.js dependencies..."
+        
+        # Check if npm or pnpm is available
+        if command_exists pnpm; then
+            pnpm install
+            print_status "Dependencies installed with pnpm"
+        elif command_exists npm; then
+            npm install
+            print_status "Dependencies installed with npm"
+        else
+            print_error "Neither npm nor pnpm found. Please install Node.js first."
+            cd ..
+            return 1
+        fi
+    else
+        print_warning "No package.json found in frontend directory"
+    fi
+    
+    # Create .env.local file if it doesn't exist
+    if [ ! -f ".env.local" ]; then
+        print_info "Creating frontend .env.local file..."
+        cat > .env.local << EOF
+# API Configuration
 NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-# Environment
+# Development
 NODE_ENV=development
-EOL
-        echo "📄 Created frontend/.env.local"
+NEXT_PUBLIC_DEBUG=true
+EOF
+        print_status "Frontend .env.local file created"
+    else
+        print_status "Frontend .env.local file already exists"
     fi
     
-    # RAG system .env
-    if [ ! -f rag-system/.env ]; then
-        cat > rag-system/.env << EOL
-# OpenAI (optional)
-OPENAI_API_KEY=your-openai-api-key
+    cd ..
+}
 
-# Chroma DB
-CHROMA_HOST=localhost
-CHROMA_PORT=8001
-
-# Environment
-ENVIRONMENT=development
-DEBUG=true
-EOL
-        echo "📄 Created rag-system/.env"
+# Function to setup Docker environment
+setup_docker() {
+    print_info "Setting up Docker environment..."
+    
+    cd docker
+    
+    # Check if docker-compose.yml exists
+    if [ -f "docker-compose.yml" ]; then
+        print_info "Building Docker images..."
+        docker-compose build
+        print_status "Docker images built"
+    else
+        print_warning "No docker-compose.yml found in docker directory"
     fi
     
-    echo "✅ Environment files created"
+    cd ..
+}
+
+# Function to initialize database
+initialize_database() {
+    print_info "Initializing database..."
+    
+    # Start PostgreSQL and Redis
+    cd docker
+    docker-compose up -d postgres redis
+    
+    # Wait for database to be ready
+    print_info "Waiting for database to be ready..."
+    sleep 10
+    
+    # Check if we can connect to the database
+    if docker-compose exec postgres pg_isready -U entropic -d entropic_ecommerce >/dev/null 2>&1; then
+        print_status "Database is ready"
+    else
+        print_warning "Database may not be ready. Please check manually."
+    fi
+    
+    cd ..
+}
+
+# Function to create useful scripts
+create_scripts() {
+    print_info "Creating development scripts..."
+    
+    # Create a quick start script
+    cat > start-dev.sh << 'EOF'
+#!/bin/bash
+echo "🚀 Starting Entropic E-commerce Development Environment"
+echo "======================================================="
+
+# Start databases
+echo "Starting databases..."
+cd docker && docker-compose up -d postgres redis
+cd ..
+
+# Start backend
+echo "Starting backend..."
+cd backend && source .venv/bin/activate && uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
+cd ..
+
+# Start frontend
+echo "Starting frontend..."
+cd frontend && npm run dev &
+
+echo "✅ Development environment started!"
+echo "Frontend: http://localhost:3000"
+echo "Backend: http://localhost:8000"
+echo "API Docs: http://localhost:8000/docs"
+echo ""
+echo "Press Ctrl+C to stop all services"
+wait
+EOF
+    chmod +x start-dev.sh
+    print_status "Development start script created"
 }
 
 # Main setup function
 main() {
-    echo "Starting setup process..."
+    print_info "Starting development environment setup..."
     
-    check_requirements
-    create_env_files
-    setup_frontend
+    # Check prerequisites
+    check_prerequisites
+    
+    # Setup backend
     setup_backend
-    setup_analytics
-    setup_rag
     
+    # Setup frontend
+    setup_frontend
+    
+    # Setup Docker
+    setup_docker
+    
+    # Initialize database
+    initialize_database
+    
+    # Create scripts
+    create_scripts
+    
+    print_status "🎉 Development environment setup completed!"
     echo ""
-    echo "🎉 Setup completed successfully!"
+    echo "📋 Next steps:"
+    echo "1. Review and update environment files:"
+    echo "   - backend/.env"
+    echo "   - frontend/.env.local"
     echo ""
-    echo "📝 Next steps:"
-    echo "1. Start PostgreSQL and Redis (via Docker or locally)"
-    echo "2. Run 'pnpm dev' in the frontend directory"
-    echo "3. Run 'python main.py' in the backend directory"
-    echo "4. Run 'python main.py' in the rag-system directory"
-    echo "5. Run 'streamlit run dashboards/streamlit_dashboard.py' in the analytics directory"
+    echo "2. Start development servers:"
+    echo "   - make dev (interactive)"
+    echo "   - make dev-backend (backend only)"
+    echo "   - make dev-frontend (frontend only)"
+    echo "   - ./start-dev.sh (simple script)"
     echo ""
-    echo "🔗 URLs:"
-    echo "- Frontend: http://localhost:3000"
-    echo "- Backend API: http://localhost:8000"
-    echo "- API Docs: http://localhost:8000/docs"
-    echo "- RAG System: http://localhost:8001"
-    echo "- Analytics Dashboard: http://localhost:8501"
+    echo "3. Access the applications:"
+    echo "   - Frontend: http://localhost:3000"
+    echo "   - Backend: http://localhost:8000"
+    echo "   - API Docs: http://localhost:8000/docs"
     echo ""
-    echo "📚 Read the README.md for more detailed instructions."
+    echo "4. Run tests:"
+    echo "   - make test"
+    echo ""
+    echo "5. View logs:"
+    echo "   - make logs"
+    echo ""
+    echo "For more commands, run: make help"
+    echo ""
+    echo "Happy coding! 🚀"
 }
 
-# Run the main function
+# Run main function
 main

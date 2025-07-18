@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,9 +9,10 @@ import { Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import Link from "next/link";
 import Image from "next/image";
+import { useAuth } from "@/contexts/AuthContext";
 
 const loginSchema = z.object({
-  emailOrUsername: z.string().min(1, "Email or username is required"),
+  email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -18,26 +20,33 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [formData, setFormData] = useState<LoginForm>({
-    emailOrUsername: "",
+    email: "",
     password: "",
   });
   const [errors, setErrors] = useState<Partial<LoginForm>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  
+  const { login } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setAuthError(null);
     
     try {
       const validatedData = loginSchema.parse(formData);
       setErrors({});
       
-      // TODO: Implement actual authentication
-      console.log("Login attempt:", validatedData);
+      const success = await login(validatedData.email, validatedData.password);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (success) {
+        router.push("/dashboard");
+      } else {
+        setAuthError("Invalid email or password");
+      }
       
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -59,6 +68,9 @@ export default function LoginPage() {
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+    if (authError) {
+      setAuthError(null);
     }
   };
 
@@ -92,16 +104,16 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-2 md:space-y-3 lg:space-y-3 xl:space-y-4 2xl:space-y-4 flex-1 flex flex-col justify-center">
               <div className="space-y-1">
                 <Input
-                  id="emailOrUsername"
-                  type="text"
-                  placeholder="Email or username"
-                  value={formData.emailOrUsername}
-                  onChange={(e) => handleChange("emailOrUsername", e.target.value)}
-                  className={`bg-white/90 border-white/20 text-gray-900 placeholder:text-gray-600 focus:bg-white focus:border-white/40 focus:shadow-none focus:outline-none focus:ring-0 focus:ring-offset-0 hover:shadow-none h-8 sm:h-9 md:h-10 lg:h-11 xl:h-12 2xl:h-14 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl 2xl:text-2xl px-3 sm:px-4 md:px-5 lg:px-6 xl:px-7 2xl:px-8 ${errors.emailOrUsername ? "border-red-400" : ""}`}
-                  aria-invalid={!!errors.emailOrUsername}
+                  id="email"
+                  type="email"
+                  placeholder="Email address"
+                  value={formData.email}
+                  onChange={(e) => handleChange("email", e.target.value)}
+                  className={`bg-white/90 border-white/20 text-gray-900 placeholder:text-gray-600 focus:bg-white focus:border-white/40 focus:shadow-none focus:outline-none focus:ring-0 focus:ring-offset-0 hover:shadow-none h-8 sm:h-9 md:h-10 lg:h-11 xl:h-12 2xl:h-14 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl 2xl:text-2xl px-3 sm:px-4 md:px-5 lg:px-6 xl:px-7 2xl:px-8 ${errors.email ? "border-red-400" : ""}`}
+                  aria-invalid={!!errors.email}
                 />
-                {errors.emailOrUsername && (
-                  <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl 2xl:text-2xl text-red-200 bg-red-900/30 px-2 py-1 rounded backdrop-blur-sm">{errors.emailOrUsername}</p>
+                {errors.email && (
+                  <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl 2xl:text-2xl text-red-200 bg-red-900/30 px-2 py-1 rounded backdrop-blur-sm">{errors.email}</p>
                 )}
               </div>
 
@@ -133,6 +145,12 @@ export default function LoginPage() {
                 )}
               </div>
 
+              {authError && (
+                <div className="bg-red-900/30 border border-red-400 rounded px-3 py-2 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl 2xl:text-2xl text-red-200 backdrop-blur-sm">
+                  {authError}
+                </div>
+              )}
+
               <div className="pt-2 sm:pt-2 md:pt-3 lg:pt-3 xl:pt-4 2xl:pt-4">
                 <Button
                   type="submit"
@@ -146,7 +164,7 @@ export default function LoginPage() {
 
             <div className="mt-3 sm:mt-4 md:mt-5 lg:mt-6 xl:mt-7 2xl:mt-8 text-center space-y-1 sm:space-y-2 md:space-y-2 lg:space-y-3 xl:space-y-3 2xl:space-y-4">
               <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl 2xl:text-2xl text-white/90 drop-shadow-md">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link
                   href="/register"
                   className="text-white font-semibold hover:text-white/80 underline underline-offset-2 transition-colors drop-shadow-sm"

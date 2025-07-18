@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { brands, DEFAULT_BRAND_LOGO, type Brand } from '@/lib/brands';
 import { cn } from '@/lib/utils';
@@ -25,6 +25,10 @@ export function BrandTicker({
   const [isHovered, setIsHovered] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const [isMobile, setIsMobile] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number | null>(null);
+  const [translateX, setTranslateX] = useState(0);
 
   // Check for mobile on mount
   useEffect(() => {
@@ -37,8 +41,58 @@ export function BrandTicker({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Create duplicated brands array
-  const duplicatedBrands = Array(duplicates).fill(brands).flat();
+  // Calculate the width of one complete set of brands
+  const singleSetWidth = React.useMemo(() => {
+    if (!isMobile) {
+      // Desktop: Each brand container width
+      // h-8 w-16 md:h-10 md:w-20 lg:h-12 lg:w-24 + px-4 md:px-6 lg:px-8
+      // Average: 80px width + 32px padding = 112px per brand
+      return brands.length * 112;
+    } else {
+      // Mobile: h-6 w-12 + px-3 = 48px + 24px = 72px per brand
+      return brands.length * 72;
+    }
+  }, [isMobile]);
+
+  // Create enough duplicates to ensure seamless loop
+  const duplicatedBrands = React.useMemo(() => {
+    // We need at least 3 sets to ensure smooth infinite scrolling
+    const minSets = Math.max(duplicates, 3);
+    return Array(minSets).fill(brands).flat();
+  }, [duplicates]);
+
+  // Measure actual width after render for more accuracy
+  const [actualSetWidth, setActualSetWidth] = React.useState(singleSetWidth);
+  const [isReady, setIsReady] = React.useState(false);
+
+  useEffect(() => {
+    const measureWidth = () => {
+      if (scrollContainerRef.current) {
+        // Wait for images to load and DOM to be ready
+        const firstBrandElement = scrollContainerRef.current.children[0] as HTMLElement;
+        if (firstBrandElement) {
+          const brandWidth = firstBrandElement.offsetWidth;
+          const actualWidth = brandWidth * brands.length;
+          setActualSetWidth(actualWidth);
+          setIsReady(true);
+        }
+      }
+    };
+
+    // Initial measurement
+    measureWidth();
+
+    // Also measure on resize
+    window.addEventListener('resize', measureWidth);
+    
+    // Retry measurement after a delay to ensure images are loaded
+    const retryTimeout = setTimeout(measureWidth, 500);
+
+    return () => {
+      window.removeEventListener('resize', measureWidth);
+      clearTimeout(retryTimeout);
+    };
+  }, [isMobile, duplicatedBrands]);
 
   const handleImageError = (brandId: string) => {
     setImageErrors(prev => new Set(prev).add(brandId));
@@ -55,8 +109,62 @@ export function BrandTicker({
   // Adjust speed for mobile
   const effectiveSpeed = isMobile ? speed * 1.5 : speed;
 
+  // Animation logic with continuous movement
+  const animate = useCallback(() => {
+    if (!scrollContainerRef.current || isHovered) return;
+
+    const pixelsPerSecond = actualSetWidth / effectiveSpeed;
+    const pixelsPerFrame = pixelsPerSecond / 60; // 60 FPS
+
+    setTranslateX(currentTranslateX => {
+      let newTranslateX = currentTranslateX;
+      
+      if (direction === 'left') {
+        newTranslateX -= pixelsPerFrame;
+        // Reset when we've moved exactly one set width
+        if (Math.abs(newTranslateX) >= actualSetWidth) {
+          newTranslateX = 0;
+        }
+      } else {
+        newTranslateX += pixelsPerFrame;
+        // Reset when we've moved exactly one set width
+        if (newTranslateX >= actualSetWidth) {
+          newTranslateX = 0;
+        }
+      }
+      
+      return newTranslateX;
+    });
+
+    animationRef.current = requestAnimationFrame(animate);
+  }, [direction, effectiveSpeed, actualSetWidth, isHovered]);
+
+  // Start/stop animation
+  useEffect(() => {
+    // Small delay to ensure DOM is ready
+    const startAnimation = () => {
+      if (!isHovered && actualSetWidth > 0 && isReady) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(startAnimation, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [animate, isHovered, actualSetWidth, isReady]);
+
   return (
     <div 
+      ref={containerRef}
       className={cn(
         "relative w-full overflow-hidden bg-background/50 border-y border-border max-w-full",
         className
@@ -76,25 +184,30 @@ export function BrandTicker({
 
       {/* Ticker container */}
       <div
-        className={cn(
-          "flex items-center py-2 md:py-3",
-          direction === 'left' ? 'brand-ticker-scroll-left' : 'brand-ticker-scroll-right'
-        )}
+        ref={scrollContainerRef}
+        className="flex items-center py-2 md:py-3"
         style={{
-          '--scroll-duration': `${effectiveSpeed}s`,
-          animationPlayState: isHovered ? 'paused' : 'running'
-        } as React.CSSProperties}
+          transform: `translateX(${translateX}px)`,
+          willChange: 'transform',
+        }}
       >
-        {duplicatedBrands.map((brand: Brand, index: number) => (
-          <BrandLogo
-            key={`${brand.id}-${index}`}
-            brand={brand}
-            hasError={imageErrors.has(brand.id)}
-            onError={() => handleImageError(brand.id)}
-            onLoad={() => handleImageLoad(brand.id)}
-            isMobile={isMobile}
-          />
-        ))}
+        {duplicatedBrands.map((brand: Brand, index: number) => {
+          // Create unique key that includes the duplicate set number
+          const setNumber = Math.floor(index / brands.length);
+          const brandIndex = index % brands.length;
+          const uniqueKey = `${brand.id}-set${setNumber}-${brandIndex}`;
+          
+          return (
+            <BrandLogo
+              key={uniqueKey}
+              brand={brand}
+              hasError={imageErrors.has(brand.id)}
+              onError={() => handleImageError(brand.id)}
+              onLoad={() => handleImageLoad(brand.id)}
+              isMobile={isMobile}
+            />
+          );
+        })}
       </div>
     </div>
   );
@@ -169,7 +282,7 @@ export function BrandTickerCompact({
       pauseOnHover={pauseOnHover}
       showGradientMask={false}
       direction={direction}
-      duplicates={2}
+      duplicates={3}
     />
   );
 }

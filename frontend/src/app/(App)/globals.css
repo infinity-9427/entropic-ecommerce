@@ -137,18 +137,19 @@
 }
 
 /* Brand Ticker Animations */
+/* Animation for infinite scroll - dynamically calculated transforms */
 @keyframes brand-ticker-scroll-left {
   0% {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-33.333333%);
+    transform: translateX(var(--animation-transform, -33.333333%));
   }
 }
 
 @keyframes brand-ticker-scroll-right {
   0% {
-    transform: translateX(-33.333333%);
+    transform: translateX(var(--animation-transform, 33.333333%));
   }
   100% {
     transform: translateX(0);
@@ -157,10 +158,16 @@
 
 .brand-ticker-scroll-left {
   animation: brand-ticker-scroll-left var(--scroll-duration, 30s) linear infinite;
+  /* Ensure hardware acceleration for smooth animations */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .brand-ticker-scroll-right {
   animation: brand-ticker-scroll-right var(--scroll-duration, 30s) linear infinite;
+  /* Ensure hardware acceleration for smooth animations */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {

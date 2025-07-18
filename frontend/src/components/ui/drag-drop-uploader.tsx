@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { Upload, X, Loader2 } from 'lucide-react'
 import { dragAndDrop } from '@formkit/drag-and-drop'
 import { uploadToCloudinary } from '@/lib/cloudinary'
+import Image from 'next/image'
 
 export interface ImageFile {
   file: File
@@ -38,7 +39,7 @@ export default function DragDropUploader({
   const [images, setImages] = useState<ImageFile[]>(initialImages)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const sortableRef = useRef<any>(null)
+  const sortableRef = useRef<{ destroy?: () => void } | null>(null)
 
   // Initialize FormKit drag and drop
   useEffect(() => {
@@ -53,7 +54,7 @@ export default function DragDropUploader({
         config: {
           sortable: true,
         }
-      })
+      }) as unknown as { destroy?: () => void }
     }
 
     return () => {
@@ -61,7 +62,7 @@ export default function DragDropUploader({
         sortableRef.current.destroy?.()
       }
     }
-  }, [images.length, onImagesChange])
+  }, [images.length, onImagesChange, images])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: acceptedTypes.reduce((acc, type) => {
@@ -212,10 +213,13 @@ export default function DragDropUploader({
                 </button>
 
                 {/* Image */}
-                <img
+                <Image
                   src={image.preview}
                   alt={`Preview ${index + 1}`}
                   className="w-full h-full object-cover"
+                  width={200}
+                  height={200}
+                  unoptimized
                 />
 
                 {/* Status Overlay */}

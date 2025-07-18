@@ -65,7 +65,7 @@ export default function CartPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        onClick={() => updateQuantity(String(item.id), item.quantity - 1)}
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
@@ -73,7 +73,7 @@ export default function CartPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => updateQuantity(String(item.id), item.quantity + 1)}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -83,7 +83,7 @@ export default function CartPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removeFromCart(String(item.id))}
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />

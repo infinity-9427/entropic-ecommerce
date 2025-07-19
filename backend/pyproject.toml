@@ -23,6 +23,10 @@ dependencies = [
     "httpx>=0.24.0",
     "cloudinary>=1.36.0",
     "pillow>=10.0.0",
+    "supabase>=2.0.0",
+    "openai>=1.0.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
 ]
 
 [build-system]

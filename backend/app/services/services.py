@@ -9,13 +9,19 @@ from datetime import datetime, timedelta
 import uuid
 
 try:
-    from . import models, schemas, auth
-    from .cloudinary_service import cloudinary_service
+    from .. import models, schemas
+    from ..core import auth
+    from .cloudinary_service import CloudinaryService
+    from .vector_search_service import ProductVectorStore
 except ImportError:
-    import models, schemas, auth
-    from cloudinary_service import cloudinary_service
+    from app import models, schemas
+    from app.core import auth
+    from app.services.cloudinary_service import CloudinaryService
+    from app.services.vector_search_service import ProductVectorStore
 
-
+# Service instances
+vector_search_service = ProductVectorStore()
+cloudinary_service = CloudinaryService()
 class UserService:
     def __init__(self, db: Session):
         self.db = db
@@ -70,6 +76,23 @@ class ProductService:
         self.db.add(db_product)
         self.db.commit()
         self.db.refresh(db_product)
+        
+        # Create vector embedding for search (async operation)
+        try:
+            import asyncio
+            product_data = {
+                'id': db_product.id,
+                'name': db_product.name,
+                'description': db_product.description,
+                'brand': db_product.brand,
+                'category': db_product.category,
+                'price': db_product.price
+            }
+            # Store product embedding in background
+            vector_search_service.store_product_embedding(product_data)
+        except Exception as e:
+            print(f"Warning: Failed to create product embedding: {e}")
+        
         return db_product
 
     def update_product(self, product_id: int, product: schemas.ProductUpdate) -> Optional[models.Product]:
@@ -83,6 +106,22 @@ class ProductService:
         
         self.db.commit()
         self.db.refresh(db_product)
+        
+        # Update vector embedding (async operation)
+        try:
+            import asyncio
+            product_data = {
+                'id': db_product.id,
+                'name': db_product.name,
+                'description': db_product.description,
+                'brand': db_product.brand,
+                'category': db_product.category,
+                'price': db_product.price
+            }
+            vector_search_service.update_product_embedding(product_id, product_data)
+        except Exception as e:
+            print(f"Warning: Failed to update product embedding: {e}")
+        
         return db_product
 
     def update_product_cloudinary_id(self, product_id: int, public_id: Optional[str]) -> Optional[models.Product]:

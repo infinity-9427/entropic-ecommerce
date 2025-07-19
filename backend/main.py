@@ -11,23 +11,23 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 import os
 
-from database import get_db, create_tables
-from models import User, Product, Order, CartItem, AnalyticsEvent
-from schemas import (
+from app.core import get_db, create_tables, create_access_token, verify_token, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.models import User, Product, Order, CartItem, AnalyticsEvent
+from app.schemas import (
     UserCreate, UserResponse, UserLogin, Token,
     ProductCreate, ProductUpdate, ProductResponse,
     CartItemCreate, CartItemUpdate, CartItemResponse, CartResponse,
     OrderCreate, OrderResponse,
     AnalyticsEventCreate, AnalyticsEventResponse,
-    DashboardMetrics, SalesMetrics, UserMetrics, ProductMetrics,
-    ImageUploadResponse
+    DashboardMetrics, ImageUploadResponse
 )
-from services import UserService, ProductService, CartService, OrderService, AnalyticsService
-from auth import create_access_token, verify_token, ACCESS_TOKEN_EXPIRE_MINUTES
-from cloudinary_service import cloudinary_service
+from app.services import UserService, ProductService, CartService, OrderService, AnalyticsService, CloudinaryService
 
 # Create tables on startup
 create_tables()
+
+# Initialize services
+cloudinary_service = CloudinaryService()
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -60,18 +60,22 @@ def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = None,
         return admin_user
     
     # If no admin user found, create one for development
-    from schemas import UserCreate
-    from auth import get_password_hash
-    admin_data = UserCreate(
+    from app.schemas import UserCreate
+    from app.core import get_password_hash
+    
+    # Create admin user directly in database
+    hashed_password = get_password_hash("admin123")
+    admin_user = User(
         email="admin@entropic.com",
         username="admin",
-        password="admin123",
+        hashed_password=hashed_password,
         first_name="Admin",
-        last_name="User"
+        last_name="User",
+        is_admin=True
     )
-    admin_user = user_service.create_user(admin_data)
-    admin_user.is_admin = True
+    db.add(admin_user)
     db.commit()
+    db.refresh(admin_user)
     return admin_user
 
 # Optional authentication dependency
@@ -176,6 +180,76 @@ async def get_product(product_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Product not found")
     return product
 
+@app.get("/products/search/{query}")
+async def search_products_vector(
+    query: str,
+    limit: int = 10,
+    similarity_threshold: float = 0.7,
+    category: Optional[str] = None,
+    brand: Optional[str] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    in_stock_only: bool = False,
+    featured_only: bool = False
+):
+    """Enhanced vector search with advanced filtering (following TimescaleDB patterns)"""
+    try:
+        from app.services import ProductVectorStore
+        vector_search_service = ProductVectorStore()
+        
+        # Build price range if provided
+        price_range = None
+        if min_price is not None or max_price is not None:
+            price_range = (min_price or 0, max_price or float('inf'))
+        
+        # Execute enhanced search
+        results = vector_search_service.search(
+            query_text=query,
+            limit=limit,
+            similarity_threshold=similarity_threshold,
+            category_filter=category,
+            brand_filter=brand,
+            price_range=price_range,
+            in_stock_only=in_stock_only,
+            featured_only=featured_only,
+            return_products=True
+        )
+        
+        return {
+            "query": query,
+            "filters": {
+                "category": category,
+                "brand": brand,
+                "price_range": price_range,
+                "in_stock_only": in_stock_only,
+                "featured_only": featured_only
+            },
+            "results": results,
+            "count": len(results),
+            "similarity_threshold": similarity_threshold
+        }
+    except Exception as e:
+        return {
+            "query": query,
+            "results": [],
+            "count": 0,
+            "error": f"Vector search error: {str(e)}"
+        }
+
+@app.get("/products/search/category/{category}/insights")
+async def get_category_insights(category: str, limit: int = 5):
+    """Get category-specific insights and recommendations"""
+    try:
+        from app.services import ProductVectorStore
+        vector_search_service = ProductVectorStore()
+        insights = vector_search_service.search_by_category_insights(category, limit)
+        return insights
+    except Exception as e:
+        return {
+            "category": category,
+            "error": f"Failed to generate insights: {str(e)}"
+        }
+
 @app.post("/products", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
 async def create_product(
     product: ProductCreate,
@@ -229,7 +303,7 @@ async def hard_delete_product(
     current_user: User = Depends(get_current_user)
 ):
     """Permanently delete a product and its image (admin only)"""
-    if not current_user.is_admin:
+    if not getattr(current_user, 'is_admin', False):
         raise HTTPException(status_code=403, detail="Not enough permissions")
     
     product_service = ProductService(db)
@@ -370,7 +444,7 @@ async def get_cart(
     """Get user's cart"""
     try:
         cart_service = CartService(db)
-        user_id = get_user_attr(current_user, 'id')
+        user_id = current_user.id  # Direct access since current_user is required
         cart_items = cart_service.get_cart(user_id)
         total_amount = cart_service.get_cart_total(user_id)
         

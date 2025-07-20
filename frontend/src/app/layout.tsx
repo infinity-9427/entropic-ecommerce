@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Inter, Geist_Mono } from 'next/font/google'
 import './(App)/globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
-import VoiceAssistant from '@/components/VoiceAssistant-RAG'
+import VoiceAssistant from '@/components/VoiceAssistantImproved'
 
 const inter = Inter({
   variable: "--font-inter",

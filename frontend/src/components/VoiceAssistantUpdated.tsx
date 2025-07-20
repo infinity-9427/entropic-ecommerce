@@ -16,6 +16,9 @@ import {
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
+import { testBrowserCapabilities } from "@/utils/browserTest";
+import { useTranslations, useLocale } from "next-intl";
+import { askQuestion, generateTTS } from "@/lib/actions";
 
 interface Message {
   id: string;
@@ -30,35 +33,10 @@ const truncateMessage = (content: string, maxLength: number = 120): string => {
   return content.substring(0, maxLength) + "...";
 };
 
-// AI response using API route
-const generateResponse = async (message: string): Promise<string> => {
-  try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ message }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to get response from chat API');
-    }
-
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Chat API returned error');
-    }
-
-    return data.response;
-  } catch (error) {
-    console.error('Chat API error:', error);
-    throw new Error('Sorry, I encountered an issue. Please try again.');
-  }
-};
-
 const VoiceAssistant = () => {
+  const t = useTranslations('VoiceAssistant');
+  const locale = useLocale(); // Get current locale from next-intl
+  
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -68,7 +46,8 @@ const VoiceAssistant = () => {
   const [mounted, setMounted] = useState(false);
   const [textInput, setTextInput] = useState("");
   const [audioError, setAudioError] = useState<string | null>(null);
-  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(true); // Add audio toggle state
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -79,9 +58,50 @@ const VoiceAssistant = () => {
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
 
+  // Helper function to get language code for API
+  const getApiLanguage = () => {
+    // Map next-intl locales to your backend language codes
+    switch (locale) {
+      case 'es':
+      case 'es-ES':
+      case 'es-MX':
+        return 'es';
+      case 'en':
+      case 'en-US':
+      case 'en-GB':
+      default:
+        return 'en';
+    }
+  };
+
+  // Helper function to get speech recognition language
+  const getSpeechRecognitionLanguage = () => {
+    switch (locale) {
+      case 'es':
+      case 'es-ES':
+        return 'es-ES';
+      case 'es-MX':
+        return 'es-MX';
+      case 'en-GB':
+        return 'en-GB';
+      case 'en':
+      case 'en-US':
+      default:
+        return 'en-US';
+    }
+  };
+
   // Fix hydration error
   useEffect(() => {
     setMounted(true);
+    
+    // Run browser compatibility test
+    testBrowserCapabilities();
+    
+    // Check if this is a Brave browser and show a warning
+    if (isBraveBrowser()) {
+      console.warn("Brave browser detected - some features may require additional permissions");
+    }
   }, []);
 
   // Cleanup audio when component unmounts
@@ -133,17 +153,18 @@ const VoiceAssistant = () => {
   const startRecording = async () => {
     if (!browserSupportsSpeechRecognition) {
       console.warn("Speech recognition not available");
-      setAudioError('Voice recording not available in this browser');
+      setAudioError(t('errors.voiceRecordingNotAvailableBrowser'));
       setTimeout(() => setAudioError(null), 3000);
       return;
     }
 
+    // Check for microphone permissions first (especially important for Brave)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach(track => track.stop());
     } catch (error) {
       console.error("Microphone permission denied:", error);
-      alert('Microphone permission is required for voice recording');
+      alert(t('errors.microphonePermissionDenied'));
       return;
     }
 
@@ -153,12 +174,12 @@ const VoiceAssistant = () => {
     try {
       SpeechRecognition.startListening({ 
         continuous: true,
-        language: 'en-US'
+        language: getSpeechRecognitionLanguage() // Use locale-based language
       });
     } catch (error) {
       console.error("Failed to start speech recognition:", error);
       setIsRecording(false);
-      alert('Failed to start voice recording');
+      alert(t('errors.voiceRecordingFailed'));
     }
   };
 
@@ -200,23 +221,40 @@ const VoiceAssistant = () => {
     setAudioError(null);
 
     try {
-      const response = await generateResponse(messageContent);
+      const apiLanguage = getApiLanguage();
+      
+      console.log(`🌐 Sending message with language: ${apiLanguage} (locale: ${locale})`);
+      
+      // 1. Get text response using Server Action (completely server-side)
+      const response = await askQuestion(messageContent, apiLanguage);
 
-      // Generate TTS if audio is enabled
-      if (audioEnabled) {
-        try {
-          await speakResponse(response);
-        } catch (audioError) {
-          console.warn("Audio generation failed:", audioError);
-          setAudioError("Audio not available");
-          setTimeout(() => setAudioError(null), 3000);
-        }
+      if (!response.success || !response.answer) {
+        throw new Error(response.error || 'Failed to get response');
       }
 
+      // 2. Generate audio BEFORE showing text with language parameter (only if audio enabled)
+      if (audioEnabled) {
+        setIsGeneratingAudio(true);
+
+        try {
+          await speakResponse(response.answer, apiLanguage);
+        } catch (audioError) {
+          console.warn(
+            "Audio generation failed, will show text without audio:",
+            audioError
+          );
+          setAudioError("Speech not available. Try later.");
+          setTimeout(() => setAudioError(null), 5000);
+        }
+
+        setIsGeneratingAudio(false);
+      }
+
+      // 3. Show text response
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         type: "assistant",
-        content: response,
+        content: response.answer,
         timestamp: new Date(),
       };
 
@@ -225,11 +263,12 @@ const VoiceAssistant = () => {
     } catch (error) {
       console.error("Error sending message:", error);
       setIsThinking(false);
+      setIsGeneratingAudio(false);
 
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         type: "assistant",
-        content: "Sorry, I'm having trouble right now. Please try again.",
+        content: "We're experiencing issues. Please try later again.",
         timestamp: new Date(),
       };
 
@@ -239,8 +278,8 @@ const VoiceAssistant = () => {
     resetTranscript();
   };
 
-  const speakResponse = async (text: string) => {
-    if (!audioEnabled) return;
+  const speakResponse = async (text: string, language?: string) => {
+    if (!audioEnabled) return; // Check if audio is enabled
     
     try {
       // Stop any existing audio
@@ -252,28 +291,152 @@ const VoiceAssistant = () => {
         audioRef.current = null;
       }
 
+      const apiLanguage = language || getApiLanguage();
+      
+      console.log(`🎵 Generating TTS with language: ${apiLanguage}`);
+
+      // Use Server Action for TTS (completely server-side)
+      const response = await generateTTS(text, apiLanguage);
+
+      if (!response.success || !response.audioBuffer) {
+        throw new Error(response.error || 'TTS generation failed');
+      }
+
       setIsSpeaking(true);
 
-      // Use Web Speech API for TTS
-      if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
-        utterance.volume = 1;
-        
-        utterance.onend = () => {
-          setIsSpeaking(false);
-        };
-        
-        utterance.onerror = () => {
-          setIsSpeaking(false);
-          throw new Error('Speech synthesis failed');
+      const audioBuffer = response.audioBuffer;
+
+      if (audioBuffer.byteLength === 0) {
+        throw new Error("Received empty audio buffer");
+      }
+
+      if (!mounted) {
+        setIsSpeaking(false);
+        return;
+      }
+
+      const audioBlob = new Blob([audioBuffer], { type: "audio/wav" });
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      const audio = new Audio();
+      audioRef.current = audio;
+
+      audio.preload = "auto";
+      audio.volume = 1.0;
+      audio.muted = false;
+
+      const playAudio = new Promise<void>((resolve, reject) => {
+        let hasResolved = false;
+
+        const cleanup = () => {
+          audio.removeEventListener("loadeddata", onLoadedData);
+          audio.removeEventListener("canplaythrough", onCanPlayThrough);
+          audio.removeEventListener("error", onError);
         };
 
-        speechSynthesis.speak(utterance);
-      } else {
-        throw new Error('Speech synthesis not supported');
-      }
+        const resolveOnce = () => {
+          if (!hasResolved) {
+            hasResolved = true;
+            cleanup();
+            resolve();
+          }
+        };
+
+        const rejectOnce = (error: any) => {
+          if (!hasResolved) {
+            hasResolved = true;
+            cleanup();
+            reject(error);
+          }
+        };
+
+        const onLoadedData = () => {
+          tryPlay();
+        };
+
+        const onCanPlayThrough = () => {
+          tryPlay();
+        };
+
+        const onError = (e: Event) => {
+          console.error("Audio loading error:", e);
+          const error = audio.error;
+          console.error("Audio error details:", {
+            code: error?.code,
+            message: error?.message,
+            networkState: audio.networkState,
+            readyState: audio.readyState,
+          });
+          rejectOnce(
+            new Error(
+              `Audio loading failed: ${error?.message || "Unknown error"}`
+            )
+          );
+        };
+
+        const tryPlay = async () => {
+          if (hasResolved) return;
+
+          try {
+            if (!mounted) {
+              resolveOnce();
+              return;
+            }
+
+            const playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+              await playPromise;
+            }
+            
+            resolveOnce();
+          } catch (playError) {
+            console.error("Play failed:", playError);
+            
+            if (playError instanceof Error && playError.name === 'NotAllowedError') {
+              console.warn("Autoplay blocked - this is common in Brave browser");
+              setAudioError(t('errors.autoplayBlocked'));
+              resolveOnce();
+            } else {
+              rejectOnce(playError);
+            }
+          }
+        };
+
+        audio.addEventListener("loadeddata", onLoadedData);
+        audio.addEventListener("canplaythrough", onCanPlayThrough);
+        audio.addEventListener("error", onError);
+
+        const onAudioEnded = () => {
+          setIsSpeaking(false);
+          URL.revokeObjectURL(audioUrl);
+          if (audioRef.current === audio) {
+            audioRef.current = null;
+          }
+        };
+
+        const onAudioError = (e: Event) => {
+          if (audio.src && !audio.paused) {
+            console.error("Audio playback error during play:", e);
+          }
+          setIsSpeaking(false);
+          URL.revokeObjectURL(audioUrl);
+          if (audioRef.current === audio) {
+            audioRef.current = null;
+          }
+        };
+
+        audio.addEventListener("ended", onAudioEnded);
+        audio.addEventListener("error", onAudioError);
+
+        audio.src = audioUrl;
+
+        if (audio.readyState >= 2) {
+          setTimeout(tryPlay, 0);
+        }
+      });
+
+      await playAudio;
     } catch (error) {
       console.error("TTS Error:", error);
       setIsSpeaking(false);
@@ -282,11 +445,9 @@ const VoiceAssistant = () => {
   };
 
   const stopSpeaking = () => {
-    if ('speechSynthesis' in window) {
-      speechSynthesis.cancel();
-    }
     if (audioRef.current) {
       const audio = audioRef.current;
+      const newAudio = audio.cloneNode() as HTMLAudioElement;
       audio.pause();
       audio.removeAttribute("src");
       audio.load();
@@ -295,6 +456,7 @@ const VoiceAssistant = () => {
     setIsSpeaking(false);
   };
 
+  // Toggle audio functionality
   const toggleAudio = () => {
     setAudioEnabled(!audioEnabled);
     if (isSpeaking) {
@@ -303,7 +465,8 @@ const VoiceAssistant = () => {
   };
 
   const sendTextMessage = async () => {
-    if (!textInput.trim() || isThinking || isSpeaking) return;
+    if (!textInput.trim() || isThinking || isSpeaking || isGeneratingAudio)
+      return;
 
     const messageContent = textInput.trim();
     setTextInput("");
@@ -321,7 +484,33 @@ const VoiceAssistant = () => {
     setMessages([]);
     setTextInput("");
     setAudioError(null);
-    stopSpeaking();
+    setIsGeneratingAudio(false);
+
+    if (audioRef.current) {
+      const audio = audioRef.current;
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+      audioRef.current = null;
+    }
+    setIsSpeaking(false);
+  };
+
+  const triggerManualAudio = async () => {
+    if (audioRef.current && audioError?.includes(t('errors.autoplayBlocked'))) {
+      try {
+        await audioRef.current.play();
+        setAudioError(null);
+      } catch (error) {
+        console.error(t('errors.manualAudioTriggerFailed'), error);
+        setAudioError(t('errors.audioPlaybackFailed'));
+      }
+    }
+  };
+
+  const isBraveBrowser = () => {
+    // @ts-ignore
+    return (navigator.brave && navigator.brave.isBrave) || false;
   };
 
   if (!mounted) {
@@ -332,14 +521,14 @@ const VoiceAssistant = () => {
     <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50">
       {!isOpen && (
         <div className="relative">
-          {/* Much darker pulse animations */}
-          <div className="absolute inset-0 rounded-full bg-gray-950/60 animate-[pulse_1s_ease-in-out_infinite] scale-110"></div>
-          <div className="absolute inset-0 rounded-full bg-gray-900/50 animate-[ping_1.4s_cubic-bezier(0.4,0,0.2,1)_infinite] scale-100"></div>
+          {/* Darker pulse animations */}
+          <div className="absolute inset-0 rounded-full bg-gray-950/50 animate-[pulse_1s_ease-in-out_infinite] scale-110"></div>
+          <div className="absolute inset-0 rounded-full bg-gray-900/40 animate-[ping_1.4s_cubic-bezier(0.4,0,0.2,1)_infinite] scale-100"></div>
 
           <Button
             onClick={() => setIsOpen(true)}
             className="relative w-20 h-20 md:w-24 md:h-24 rounded-full bg-gray-950 hover:bg-gray-900 text-white shadow-xl hover:shadow-2xl transition-transform duration-400 ease-out hover:scale-105 border hover:border-gray-700/50"
-            title="Voice and Text Assistant"
+            title={t('tooltips.voiceAndText')}
           >
             <Mic className="w-14 h-14 md:w-16 md:h-16 transition-transform duration-300 ease-in-out" />
           </Button>
@@ -360,7 +549,7 @@ const VoiceAssistant = () => {
 
             <div className="space-y-2 md:space-y-3">
               <h3 className="text-base md:text-lg font-semibold text-white">
-                Recording {formatTime(recordingTime)}
+                {t('status.recording')} {formatTime(recordingTime)}
               </h3>
               {transcript && (
                 <div className="max-w-xs mx-auto">
@@ -369,21 +558,22 @@ const VoiceAssistant = () => {
                   </p>
                 </div>
               )}
-              <p className="text-xs text-gray-400">Speak clearly, then stop recording</p>
+
+              <p className="text-xs text-gray-400">{t('messages.recordingInstructions')}</p>
             </div>
 
             <div className="flex items-center justify-center space-x-3">
               <Button
                 onClick={cancelRecording}
                 className="w-10 h-10 md:w-10 md:h-10 rounded-full bg-red-700 hover:bg-red-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                title="Cancel Recording"
+                title={t('tooltips.cancelRecording')}
               >
                 <X className="w-4 h-4" />
               </Button>
               <Button
                 onClick={stopRecording}
                 className="w-10 h-10 md:w-10 md:h-10 rounded-full bg-green-700 hover:bg-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                title="Send Message"
+                title={t('tooltips.sendMessage')}
               >
                 <Send className="w-4 h-4" />
               </Button>
@@ -392,7 +582,7 @@ const VoiceAssistant = () => {
         </div>
       )}
 
-      {/* Chat Widget - Darker Theme */}
+      {/* Chat Widget - Much darker theme */}
       {isOpen && (
         <div
           className={`
@@ -407,7 +597,7 @@ const VoiceAssistant = () => {
           lg:w-96 lg:h-[600px]
         `}
         >
-          {/* Header - Darker */}
+          {/* Header - Much darker */}
           <div className="bg-black text-white p-3 md:p-4 flex items-center justify-between border-b border-gray-800">
             <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
               <div className="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-purple-700">
@@ -415,12 +605,12 @@ const VoiceAssistant = () => {
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="font-semibold text-white truncate text-sm md:text-base">
-                  AI Assistant
+                  {t('headers.title')}
                 </h3>
                 <div className="flex items-center space-x-2">
                   <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full flex-shrink-0 bg-green-500"></div>
                   <p className="text-xs text-gray-400 truncate">
-                    Online
+                    {t('status.online')} 
                   </p>
                 </div>
               </div>
@@ -456,7 +646,7 @@ const VoiceAssistant = () => {
                     variant="ghost"
                     size="sm"
                     className="text-gray-400 hover:text-red-400 hover:bg-gray-800 w-6 h-6 md:w-7 md:h-7 p-0"
-                    title="Clear All Messages"
+                    title={t('tooltips.clearAllMessages')}
                   >
                     <Trash2 className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </Button>
@@ -474,14 +664,14 @@ const VoiceAssistant = () => {
                 variant="ghost"
                 size="sm"
                 className="text-gray-400 hover:text-white hover:bg-gray-800 w-6 h-6 md:w-7 md:h-7 p-0"
-                title="Close Chat"
+                title={t('tooltips.closeChat')}
               >
                 <X className="w-3 h-3 md:w-3.5 md:h-3.5" />
               </Button>
             </div>
           </div>
 
-          {/* Messages - Darker background */}
+          {/* Messages - Much darker background */}
           <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4 bg-black">
             {messages.length === 0 && (
               <div className="text-center py-6 md:py-8">
@@ -489,7 +679,7 @@ const VoiceAssistant = () => {
                   <Bot className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </div>
                 <p className="text-sm font-semibold text-gray-300 mb-2 px-4">
-                  Welcome! Ask me anything or use voice recording.
+                  {t('messages.welcomeVoice')}
                 </p>
               </div>
             )}
@@ -546,11 +736,11 @@ const VoiceAssistant = () => {
               </div>
             ))}
 
-            {isThinking && (
+            {(isThinking || isGeneratingAudio) && (
               <div className="flex justify-start">
                 <div className="flex items-center space-x-2 py-2 px-3 bg-gray-900 rounded-2xl border border-gray-800">
                   <span className="text-purple-400 font-medium text-sm">
-                    Thinking
+                    {t('status.thinking')}
                   </span>
                   <div className="flex space-x-1">
                     <div
@@ -573,10 +763,16 @@ const VoiceAssistant = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Audio Status Indicator - Darker */}
+          {/* Audio Status Indicator - Much darker */}
           {(isSpeaking || audioError) && (
             <div className="px-3 md:px-4 py-2 bg-gray-900 border-t border-gray-800">
-              <div className="flex items-center justify-center space-x-2">
+              <div 
+                className={`flex items-center justify-center space-x-2 ${
+                  audioError?.includes(t('errors.autoplayBlocked')) ? "cursor-pointer hover:bg-gray-800 rounded p-1 transition-colors" : ""
+                }`}
+                onClick={audioError?.includes(t('errors.autoplayBlocked')) ? triggerManualAudio : undefined}
+                title={audioError?.includes(t('errors.autoplayBlocked')) ? t('tooltips.enableAudio') : undefined}
+              >
                 {isSpeaking && (
                   <div className="flex space-x-1">
                     <div
@@ -598,15 +794,22 @@ const VoiceAssistant = () => {
                   </div>
                 )}
                 {audioError && (
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <div className={`w-3 h-3 rounded-full ${
+                    audioError.includes(t('errors.autoplayBlocked')) ? "bg-yellow-500" : "bg-red-500"
+                  }`}></div>
                 )}
                 <span
                   className={`font-medium text-sm ${
-                    audioError ? "text-red-400" : "text-purple-400"
+                    audioError?.includes(t('errors.autoplayBlocked'))
+                      ? "text-yellow-400" 
+                      : audioError 
+                        ? "text-red-400" 
+                        : "text-purple-400"
                   }`}
                 >
-                  {isSpeaking ? "Speaking" : audioError}
+                  {isSpeaking ? t('status.speaking') : audioError}
                 </span>
+                {/* Stop speaking button */}
                 {isSpeaking && (
                   <Button
                     onClick={stopSpeaking}
@@ -622,19 +825,24 @@ const VoiceAssistant = () => {
             </div>
           )}
 
-          {/* Control Panel - Darker */}
-          <div className="bg-gray-900 border-t border-gray-800 p-3 md:p-4">
+          {/* Control Panel - Much darker */}
+          <div className="bg-gray-900 border-t border-gray-800 p-3 md:p-4 select-none" style={{ cursor: 'default', userSelect: 'none' }}>
             {/* Text Input */}
-            <div className="flex items-center space-x-2 mb-3">
+            <div className="flex items-center space-x-2 mb-3 select-none" style={{ cursor: 'default', userSelect: 'none' }}>
               <div className="relative flex-1">
                 <input
                   type="text"
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Type your message..."
-                  disabled={isThinking || isSpeaking}
-                  className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 pr-8 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50"
+                  placeholder={t('placeholders.typeMessage')}
+                  disabled={isThinking || isSpeaking || isGeneratingAudio}
+                  className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 pr-8 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 caret-white disabled:caret-transparent select-text"
+                  style={{ 
+                    caretColor: isThinking || isSpeaking || isGeneratingAudio ? 'transparent' : 'white',
+                    userSelect: 'text',
+                    cursor: isThinking || isSpeaking || isGeneratingAudio ? 'not-allowed' : 'text'
+                  }}
                 />
                 {textInput && (
                   <Button
@@ -642,15 +850,20 @@ const VoiceAssistant = () => {
                     variant="ghost"
                     size="sm"
                     className="absolute right-1 top-1/2 transform -translate-y-1/2 w-5 h-5 md:w-6 md:h-6 p-0 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
-                    title="Clear Input"
+                    title={t('tooltips.clearInput')}
                   >
-                    <X className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                    <X className="w-2.5 h-2.5 md:w-3 md:h-3 " />
                   </Button>
                 )}
               </div>
               <Button
                 onClick={sendTextMessage}
-                disabled={!textInput.trim() || isThinking || isSpeaking}
+                disabled={
+                  !textInput.trim() ||
+                  isThinking ||
+                  isSpeaking ||
+                  isGeneratingAudio
+                }
                 className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
               >
                 <Send className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -658,12 +871,14 @@ const VoiceAssistant = () => {
             </div>
 
             {/* Voice Control */}
-            <div className="flex items-center justify-center space-x-3">
+            <div className="flex items-center justify-center space-x-3 select-none" style={{ cursor: 'default', userSelect: 'none' }}>
               <Button
                 onClick={startRecording}
-                disabled={isThinking || isSpeaking || isRecording}
+                disabled={
+                  isThinking || isSpeaking || isRecording || isGeneratingAudio
+                }
                 className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
-                title="Start Recording"
+                title={t('tooltips.startRecording')}
               >
                 <Mic className="w-4 h-4 md:w-5 md:h-5" />
               </Button>
@@ -672,19 +887,19 @@ const VoiceAssistant = () => {
                 <Button
                   onClick={stopSpeaking}
                   className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-                  title="Stop Speaking"
+                  title={t('tooltips.stopSpeaking')}
                 >
                   <MicOff className="w-4 h-4 md:w-5 md:h-5" />
                 </Button>
               )}
             </div>
 
-            <div className="text-center mt-2">
-              <p className="text-xs text-gray-500">
+            <div className="text-center mt-2 select-none" style={{ cursor: 'default', userSelect: 'none' }}>
+              <p className="text-xs text-gray-500 select-none" style={{ userSelect: 'none' }}>
                 {isRecording
-                  ? `Recording ${formatTime(recordingTime)}`
-                  : audioEnabled 
-                    ? "Type or record your message"
+                  ? `${t('status.recording')} ${formatTime(recordingTime)}`
+                  : audioEnabled
+                    ? t('messages.typeOrRecord')
                     : "Audio disabled - Type only"
                 }
               </p>

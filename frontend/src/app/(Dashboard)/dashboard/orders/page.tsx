@@ -44,23 +44,49 @@ export default function OrdersPage() {
       setLoading(true)
       setError(null)
       
-      // Use admin endpoint for development (no authentication required)
-      const endpoint = 'http://localhost:8000/admin/orders'
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
       
-      const response = await fetch(endpoint)
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      // Try multiple endpoints for orders
+      const endpoints = [
+        `${API_URL}/admin/orders`,
+        `${API_URL}/orders`
+      ]
+      
+      let success = false
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(endpoint, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache',
+            }
+          })
+          
+          if (response.ok) {
+            const data = await response.json()
+            setOrders(Array.isArray(data) ? data : [])
+            success = true
+            break
+          }
+        } catch (e) {
+          console.warn(`Failed to fetch from ${endpoint}:`, e)
+        }
       }
-      const data = await response.json()
-      setOrders(Array.isArray(data) ? data : [])
+      
+      if (!success) {
+        console.warn('Orders API not available.')
+        setOrders([])
+        setError('Orders API not available.')
+      }
+      
     } catch (err) {
       console.error('Orders fetch error:', err)
-      setError(err instanceof Error ? err.message : 'Failed to fetch orders')
-      setOrders([]) // Set empty array on error
+      setError('Failed to load orders. Check if the backend is running.')
+      setOrders([])
     } finally {
       setLoading(false)
     }
-  }, []) // Removed dependencies that cause re-renders
+  }, [])
 
   useEffect(() => {
     // Temporarily disable authentication guards for development

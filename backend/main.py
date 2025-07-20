@@ -55,28 +55,51 @@ def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = None,
     # TODO: Remove this development bypass before production
     # Development bypass for testing - always return admin user
     user_service = UserService(db)
-    admin_user = user_service.get_user_by_email("admin@entropic.com")
+    
+    # First check if any admin user exists
+    admin_user = db.query(User).filter(User.is_admin == True).first()
     if admin_user:
+        print(f"✅ Using existing admin user: {admin_user.username} ({admin_user.email})")
         return admin_user
     
     # If no admin user found, create one for development
     from app.schemas import UserCreate
     from app.core import get_password_hash
     
-    # Create admin user directly in database
-    hashed_password = get_password_hash("admin123")
-    admin_user = User(
-        email="admin@entropic.com",
-        username="admin",
-        hashed_password=hashed_password,
-        first_name="Admin",
-        last_name="User",
-        is_admin=True
-    )
-    db.add(admin_user)
-    db.commit()
-    db.refresh(admin_user)
-    return admin_user
+    print("🔧 Creating admin user for development...")
+    
+    try:
+        # Create admin user directly in database
+        hashed_password = get_password_hash("admin123")
+        admin_user = User(
+            email="admin@entropic.com",
+            username="admin",
+            hashed_password=hashed_password,
+            first_name="Admin",
+            last_name="User",
+            is_admin=True,
+            is_active=True,
+            is_verified=False
+        )
+        db.add(admin_user)
+        db.flush()  # Flush to catch IntegrityError before commit
+        db.commit()
+        db.refresh(admin_user)
+        print(f"✅ Created admin user: {admin_user.username}")
+        return admin_user
+        
+    except Exception as e:
+        print(f"❌ Error creating admin user: {str(e)}")
+        db.rollback()
+        
+        # Check one more time if admin user exists (race condition or existing user)
+        admin_user = db.query(User).filter(User.is_admin == True).first()
+        if admin_user:
+            print(f"✅ Retrieved existing admin user after error: {admin_user.username}")
+            return admin_user
+        
+        # If we still can't get the admin user, raise an error
+        raise HTTPException(status_code=500, detail="Failed to create or retrieve admin user")
 
 # Optional authentication dependency
 def get_current_user_optional(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):

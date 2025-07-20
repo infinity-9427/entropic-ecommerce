@@ -137,30 +137,30 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <MetricCard
             title="Total Users"
-            value={metrics?.total_users ?? "No data available"}
+            value={metrics?.total_users || 0}
             icon={<Users className="w-6 h-6 text-blue-600" />}
-            trend={metrics?.total_users ? { value: 12, isPositive: true } : undefined}
+            trend={{ value: 12, isPositive: true }}
           />
           
           <MetricCard
             title="Total Products"
-            value={metrics?.total_products ?? "No data available"}
+            value={metrics?.total_products || 0}
             icon={<Package className="w-6 h-6 text-green-600" />}
-            trend={metrics?.total_products ? { value: 8, isPositive: true } : undefined}
+            trend={{ value: 8, isPositive: true }}
           />
           
           <MetricCard
             title="Total Orders"
-            value={metrics?.total_orders ?? "No data available"}
+            value={metrics?.total_orders || 0}
             icon={<ShoppingCart className="w-6 h-6 text-purple-600" />}
-            trend={metrics?.total_orders ? { value: 15, isPositive: true } : undefined}
+            trend={{ value: 15, isPositive: true }}
           />
           
           <MetricCard
             title="Total Revenue"
-            value={metrics?.total_revenue ? formatCurrency(metrics.total_revenue) : "No data available"}
+            value={formatCurrency(metrics?.total_revenue || 0)}
             icon={<DollarSign className="w-6 h-6 text-yellow-600" />}
-            trend={metrics?.total_revenue ? { value: 23, isPositive: true } : undefined}
+            trend={{ value: 23, isPositive: true }}
           />
         </div>
 
@@ -168,26 +168,26 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <MetricCard
             title="Avg Order Value"
-            value={metrics?.avg_order_value ? formatCurrency(metrics.avg_order_value) : "No data available"}
+            value={formatCurrency(metrics?.avg_order_value || 0)}
             icon={<BarChart3 className="w-6 h-6 text-orange-600" />}
           />
           
           <MetricCard
             title="Conversion Rate"
-            value={metrics?.conversion_rate ? `${metrics.conversion_rate.toFixed(1)}%` : "No data available"}
+            value={`${(metrics?.conversion_rate || 0).toFixed(1)}%`}
             icon={<Zap className="w-6 h-6 text-pink-600" />}
-            trend={metrics?.conversion_rate ? { value: 2.4, isPositive: true } : undefined}
+            trend={{ value: 2.4, isPositive: true }}
           />
           
           <MetricCard
             title="Page Views"
-            value={metrics?.page_views ?? "No data available"}
+            value={metrics?.page_views || 0}
             icon={<Eye className="w-6 h-6 text-indigo-600" />}
           />
           
           <MetricCard
             title="Product Views"
-            value={metrics?.product_views ?? "No data available"}
+            value={metrics?.product_views || 0}
             icon={<Activity className="w-6 h-6 text-red-600" />}
           />
         </div>

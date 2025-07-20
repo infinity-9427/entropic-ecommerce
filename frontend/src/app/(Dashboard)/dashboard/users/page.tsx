@@ -29,20 +29,32 @@ export default function UsersPage() {
       setLoading(true)
       setError(null)
       
-      const response = await fetch('http://localhost:8000/admin/users')
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      
+      const response = await fetch(`${API_URL}/admin/users`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      })
+      
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        console.warn(`Users API not available (${response.status}).`)
+        setUsers([])
+        setError('Users API not available.')
+        return
       }
+      
       const data = await response.json()
       setUsers(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error('Users fetch error:', err)
-      setError(err instanceof Error ? err.message : 'Failed to fetch users')
-      setUsers([]) // Set empty array on error
+      setError('Failed to load users. Check if the backend is running.')
+      setUsers([])
     } finally {
       setLoading(false)
     }
-  }, []) // Removed dependencies that cause re-renders
+  }, [])
 
   useEffect(() => {
     // Temporarily disable authentication guards for development

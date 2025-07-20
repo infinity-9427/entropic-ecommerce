@@ -22,6 +22,7 @@ from app.schemas import (
     DashboardMetrics, ImageUploadResponse
 )
 from app.services import UserService, ProductService, CartService, OrderService, AnalyticsService, CloudinaryService
+from app.api.rag import router as rag_router
 
 # Create tables on startup
 create_tables()
@@ -46,6 +47,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include API routers
+app.include_router(rag_router)
 
 # Security
 security = HTTPBearer()

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Footer } from "@/components/footer";
+import VoiceAssistant from "@/components/VoiceAssistant-RAG";
 
 export const metadata: Metadata = {
   title: "Entropic - Shop Amazing Products",
@@ -18,6 +19,7 @@ export default function RootLayout({
         {children}
       </div>
       <Footer />
+      <VoiceAssistant />
     </div>
   );
 }

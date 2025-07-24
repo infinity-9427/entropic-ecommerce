@@ -162,26 +162,32 @@ export default function Home() {
       <div className="h-48"></div>
 
       <main className="container mx-auto px-4 py-6 w-full max-w-7xl">
-        {/* Results Count */}
+        {/* Results Count or Welcome Message */}
         <div className="mb-6 w-full">
-          <p className="text-sm text-muted-foreground">
-            {loading ? 'Loading...' : (
-              <>
+          {loading ? (
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          ) : (
+            // Only show results count when user is actively searching or filtering
+            (searchTerm.trim() || selectedCategory !== 'All') ? (
+              <p className="text-sm text-muted-foreground">
                 {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? 'result' : 'results'}
                 {searchTerm && ` for "${searchTerm}"`}
                 {selectedCategory !== 'All' && ` in ${selectedCategory}`}
-              </>
-            )}
-          </p>
+              </p>
+            ) : (
+              // Welcome message for homepage when no search/filter is active
+              <div className="space-y-1">
+                <h2 className="text-2xl font-bold text-gray-900">Discover Amazing Products</h2>
+                <p className="text-sm text-muted-foreground">Find everything you need from top brands and quality sellers</p>
+              </div>
+            )
+          )}
           
           {/* Search Error Message */}
           {searchError && (
-            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600 flex items-center">
-                <span className="mr-2">⚠️</span>
-                {searchError}
-              </p>
-            </div>
+            <p className="mt-2 text-sm text-gray-600">
+              {searchError}
+            </p>
           )}
         </div>
 
@@ -236,15 +242,11 @@ export default function Home() {
         {!loading && !error && products.length > 0 && filteredAndSortedProducts.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="text-center max-w-md">
-              <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No products found
+                Oops, nothing matched your search!
               </h3>
               <p className="text-muted-foreground text-sm mb-4">
-                Try adjusting your search or filter criteria
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {products.length} products available, but none match your current filters
+                Try using different keywords or filters to find what you're looking for.
               </p>
             </div>
           </div>

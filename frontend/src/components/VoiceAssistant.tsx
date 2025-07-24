@@ -10,8 +10,9 @@ import {
   User,
   X,
   Trash2,
-  Volume2,
-  VolumeX,
+  ShoppingBag,
+  Star,
+  Search,
 } from "lucide-react";
 import SpeechRecognition, {
   useSpeechRecognition,
@@ -22,45 +23,40 @@ interface Message {
   type: "user" | "assistant";
   content: string;
   timestamp: Date;
+  products?: ProductResult[];
+  context_type?: string;
 }
 
-// AI response using API route
-const generateResponse = async (message: string): Promise<string> => {
-  try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ message }),
-    });
+interface ProductResult {
+  product_id: number;
+  name: string;
+  category: string;
+  description: string;
+  price: number;
+  similarity: number;
+  brand?: string;
+  image_url?: string;
+}
 
-    if (!response.ok) {
-      throw new Error('Failed to get response from chat API');
-    }
-
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Chat API returned error');
-    }
-
-    return data.response;
-  } catch (error) {
-    console.error('Chat API error:', error);
-    throw new Error('Sorry, I encountered an issue. Please try again.');
-  }
-};
-
-// Function to truncate long messages
-const truncateMessage = (content: string, maxLength: number = 200): string => {
-  if (content.length <= maxLength) return content;
-  return content.substring(0, maxLength) + "...";
-};
+interface RAGResponse {
+  response: string;
+  products_found: number;
+  similar_products: ProductResult[];
+  context_type: string;
+  success: boolean;
+}
 
 const VoiceAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      type: "assistant",
+      content: 'Hello! I\'m your AI shopping assistant. I can help you find products, compare items, answer questions about your orders, and provide personalized recommendations. Try asking me something like "Show me running shoes under $100" or "What\'s the best laptop for students?"',
+      timestamp: new Date(),
+      context_type: 'greeting'
+    }
+  ]);
   const [isRecording, setIsRecording] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -68,7 +64,7 @@ const VoiceAssistant = () => {
   const [mounted, setMounted] = useState(false);
   const [textInput, setTextInput] = useState("");
   const [audioError, setAudioError] = useState<string | null>(null);
-  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -200,24 +196,45 @@ const VoiceAssistant = () => {
     setAudioError(null);
 
     try {
-      const response = await generateResponse(messageContent);
+      // Call RAG system endpoint for e-commerce
+      const response = await fetch('/api/rag-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: messageContent,
+          language: 'en'
+        }),
+      });
 
-      // Generate TTS if audio is enabled
-      if (audioEnabled) {
-        try {
-          await speakResponse(response);
-        } catch (audioError) {
-          console.warn("Audio generation failed:", audioError);
-          setAudioError("Audio not available");
-          setTimeout(() => setAudioError(null), 3000);
-        }
+      if (!response.ok) {
+        throw new Error('Failed to get response from RAG system');
       }
 
+      const data: RAGResponse = await response.json();
+
+      if (!data.success) {
+        throw new Error('RAG system returned error');
+      }
+
+      // Generate audio if supported
+      try {
+        await speakResponse(data.response);
+      } catch (audioError) {
+        console.warn("Audio generation failed:", audioError);
+        setAudioError("Speech not available. Try later.");
+        setTimeout(() => setAudioError(null), 5000);
+      }
+
+      // Show text response with products if any
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         type: "assistant",
-        content: response,
+        content: data.response,
         timestamp: new Date(),
+        products: data.similar_products,
+        context_type: data.context_type,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -229,7 +246,7 @@ const VoiceAssistant = () => {
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         type: "assistant",
-        content: "Sorry, I'm having trouble right now. Please try again.",
+        content: "I'm experiencing technical difficulties. Please try again in a moment.",
         timestamp: new Date(),
       };
 
@@ -240,8 +257,6 @@ const VoiceAssistant = () => {
   };
 
   const speakResponse = async (text: string) => {
-    if (!audioEnabled) return;
-    
     try {
       // Stop any existing audio
       if (audioRef.current) {
@@ -295,15 +310,8 @@ const VoiceAssistant = () => {
     setIsSpeaking(false);
   };
 
-  const toggleAudio = () => {
-    setAudioEnabled(!audioEnabled);
-    if (isSpeaking) {
-      stopSpeaking();
-    }
-  };
-
   const sendTextMessage = async () => {
-    if (!textInput.trim() || isThinking || isSpeaking) return;
+    if (!textInput.trim() || isThinking || isSpeaking || isGeneratingAudio) return;
 
     const messageContent = textInput.trim();
     setTextInput("");
@@ -318,10 +326,25 @@ const VoiceAssistant = () => {
   };
 
   const clearMessages = () => {
-    setMessages([]);
+    setMessages([{
+      id: '1',
+      type: "assistant",
+      content: 'Hello! I\'m your AI shopping assistant. I can help you find products, compare items, answer questions about your orders, and provide personalized recommendations.',
+      timestamp: new Date(),
+      context_type: 'greeting'
+    }]);
     setTextInput("");
     setAudioError(null);
-    stopSpeaking();
+    setIsGeneratingAudio(false);
+
+    if (audioRef.current) {
+      const audio = audioRef.current;
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+      audioRef.current = null;
+    }
+    setIsSpeaking(false);
   };
 
   if (!mounted) {
@@ -396,7 +419,7 @@ const VoiceAssistant = () => {
       {isOpen && (
         <div
           className={`
-          bg-gray-950 rounded-2xl shadow-2xl border border-gray-800 
+          bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 
           flex flex-col overflow-hidden relative
           w-[calc(100vw-2rem)] h-[calc(100vh-8rem)] 
           max-w-[calc(100vw-2rem)] max-h-[calc(100vh-8rem)]
@@ -408,18 +431,18 @@ const VoiceAssistant = () => {
         `}
         >
           {/* Header - Darker */}
-          <div className="bg-black text-white p-3 md:p-4 flex items-center justify-between border-b border-gray-800">
+          <div className="bg-slate-900 text-white p-3 md:p-4 flex items-center justify-between border-b border-slate-700">
             <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
-              <div className="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-blue-600">
-                <Bot className="w-4 h-4 md:w-5 md:h-5 text-white" />
+              <div className="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-teal-600">
+                <ShoppingBag className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="font-semibold text-white truncate text-sm md:text-base">
-                  AI Assistant
+                  AI Shopping Assistant
                 </h3>
                 <div className="flex items-center space-x-2">
                   <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full flex-shrink-0 bg-green-500"></div>
-                  <p className="text-xs text-gray-400 truncate">
+                  <p className="text-xs text-slate-400 truncate">
                     Online
                   </p>
                 </div>
@@ -427,35 +450,16 @@ const VoiceAssistant = () => {
             </div>
 
             <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
-              {/* Audio toggle button */}
-              <Button
-                onClick={toggleAudio}
-                variant="ghost"
-                size="sm"
-                className={`${
-                  audioEnabled 
-                    ? "text-blue-400 hover:text-blue-300" 
-                    : "text-gray-500 hover:text-gray-400"
-                } hover:bg-gray-800 w-6 h-6 md:w-7 md:h-7 p-0`}
-                title={audioEnabled ? "Disable Audio" : "Enable Audio"}
-              >
-                {audioEnabled ? (
-                  <Volume2 className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                ) : (
-                  <VolumeX className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                )}
-              </Button>
-
-              {messages.length > 0 && (
+              {messages.length > 1 && (
                 <div className="flex items-center space-x-1">
-                  <span className="text-xs text-gray-400 font-medium">
-                    {messages.length}
+                  <span className="text-xs text-slate-400 font-medium">
+                    {messages.length - 1}
                   </span>
                   <Button
                     onClick={clearMessages}
                     variant="ghost"
                     size="sm"
-                    className="text-gray-400 hover:text-red-400 hover:bg-gray-800 w-6 h-6 md:w-7 md:h-7 p-0"
+                    className="text-slate-400 hover:text-red-400 hover:bg-slate-700 w-6 h-6 md:w-7 md:h-7 p-0"
                     title="Clear All Messages"
                   >
                     <Trash2 className="w-3 h-3 md:w-3.5 md:h-3.5" />
@@ -473,7 +477,7 @@ const VoiceAssistant = () => {
                 }}
                 variant="ghost"
                 size="sm"
-                className="text-gray-400 hover:text-white hover:bg-gray-800 w-6 h-6 md:w-7 md:h-7 p-0"
+                className="text-slate-400 hover:text-white hover:bg-slate-700 w-6 h-6 md:w-7 md:h-7 p-0"
                 title="Close Chat"
               >
                 <X className="w-3 h-3 md:w-3.5 md:h-3.5" />
@@ -482,7 +486,7 @@ const VoiceAssistant = () => {
           </div>
 
           {/* Messages - Darker background */}
-          <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4 bg-black">
+          <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4 bg-slate-900">
             {messages.length === 0 && (
               <div className="text-center py-6 md:py-8">
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-3 bg-blue-600">
@@ -510,30 +514,75 @@ const VoiceAssistant = () => {
                 >
                   <div
                     className={`w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      message.type === "user" ? "bg-blue-600" : "bg-blue-600"
+                      message.type === "user" ? "bg-blue-600" : "bg-teal-600"
                     }`}
                   >
                     {message.type === "user" ? (
                       <User className="w-2.5 h-2.5 md:w-3 md:h-3 text-white" />
                     ) : (
-                      <Bot className="w-2.5 h-2.5 md:w-3 md:h-3 text-white" />
+                      <ShoppingBag className="w-2.5 h-2.5 md:w-3 md:h-3 text-white" />
                     )}
                   </div>
                   <div
                     className={`rounded-2xl px-3 py-2 ${
                       message.type === "user"
                         ? "bg-blue-600 text-white"
-                        : "bg-gray-900 border border-gray-800 text-gray-200"
+                        : "bg-slate-800 border border-slate-700 text-slate-200"
                     }`}
                   >
                     <p className="text-sm leading-relaxed break-words">
-                      {truncateMessage(message.content)}
+                      {message.content}
                     </p>
+                    
+                    {/* Product Results */}
+                    {message.products && message.products.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        <h4 className="text-xs font-semibold text-slate-300 border-b border-slate-600 pb-1">
+                          Found Products ({message.products.length})
+                        </h4>
+                        {message.products.slice(0, 3).map((product) => (
+                          <div
+                            key={product.product_id}
+                            className="bg-slate-700/50 rounded-lg p-2 text-xs"
+                          >
+                            <div className="flex justify-between items-start mb-1">
+                              <h5 className="font-medium text-slate-200 line-clamp-1">
+                                {product.name}
+                              </h5>
+                              <span className="text-green-400 font-bold ml-2">
+                                ${product.price}
+                              </span>
+                            </div>
+                            <p className="text-slate-400 text-xs line-clamp-2 mb-1">
+                              {product.description}
+                            </p>
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-500 text-xs">
+                                {product.category}
+                                {product.brand && ` • ${product.brand}`}
+                              </span>
+                              <div className="flex items-center space-x-1">
+                                <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                                <span className="text-xs text-slate-400">
+                                  {(product.similarity * 100).toFixed(0)}% match
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {message.products.length > 3 && (
+                          <p className="text-xs text-slate-400 text-center">
+                            +{message.products.length - 3} more products
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     <p
                       className={`text-xs mt-1 ${
                         message.type === "user"
                           ? "text-blue-100"
-                          : "text-gray-500"
+                          : "text-slate-500"
                       }`}
                     >
                       {message.timestamp.toLocaleTimeString([], {
@@ -546,23 +595,23 @@ const VoiceAssistant = () => {
               </div>
             ))}
 
-            {isThinking && (
+            {(isThinking || isGeneratingAudio) && (
               <div className="flex justify-start">
-                <div className="flex items-center space-x-2 py-2 px-3 bg-gray-900 rounded-2xl border border-gray-800">
-                  <span className="text-blue-400 font-medium text-sm">
-                    Thinking
+                <div className="flex items-center space-x-2 py-2 px-3 bg-slate-800 rounded-2xl border border-slate-700">
+                  <span className="text-teal-400 font-medium text-sm">
+                    {isGeneratingAudio ? "Generating speech..." : "AI is thinking..."}
                   </span>
                   <div className="flex space-x-1">
                     <div
-                      className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"
+                      className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce"
                       style={{ animationDelay: "0ms" }}
                     ></div>
                     <div
-                      className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"
+                      className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce"
                       style={{ animationDelay: "150ms" }}
                     ></div>
                     <div
-                      className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"
+                      className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce"
                       style={{ animationDelay: "300ms" }}
                     ></div>
                   </div>
@@ -575,24 +624,24 @@ const VoiceAssistant = () => {
 
           {/* Audio Status Indicator - Darker */}
           {(isSpeaking || audioError) && (
-            <div className="px-3 md:px-4 py-2 bg-gray-900 border-t border-gray-800">
+            <div className="px-3 md:px-4 py-2 bg-slate-800 border-t border-slate-700">
               <div className="flex items-center justify-center space-x-2">
                 {isSpeaking && (
                   <div className="flex space-x-1">
                     <div
-                      className="w-1 h-2 md:h-3 bg-blue-500 rounded animate-pulse"
+                      className="w-1 h-2 md:h-3 bg-teal-500 rounded animate-pulse"
                       style={{ animationDelay: "0ms" }}
                     ></div>
                     <div
-                      className="w-1 h-3 md:h-4 bg-blue-500 rounded animate-pulse"
+                      className="w-1 h-3 md:h-4 bg-teal-500 rounded animate-pulse"
                       style={{ animationDelay: "100ms" }}
                     ></div>
                     <div
-                      className="w-1 h-2 bg-blue-500 rounded animate-pulse"
+                      className="w-1 h-2 bg-teal-500 rounded animate-pulse"
                       style={{ animationDelay: "200ms" }}
                     ></div>
                     <div
-                      className="w-1 h-2 md:h-3 bg-blue-500 rounded animate-pulse"
+                      className="w-1 h-2 md:h-3 bg-teal-500 rounded animate-pulse"
                       style={{ animationDelay: "300ms" }}
                     ></div>
                   </div>
@@ -602,28 +651,21 @@ const VoiceAssistant = () => {
                 )}
                 <span
                   className={`font-medium text-sm ${
-                    audioError ? "text-red-400" : "text-blue-400"
+                    audioError?.includes('autoplay')
+                      ? "text-yellow-400" 
+                      : audioError 
+                        ? "text-red-400" 
+                        : "text-teal-400"
                   }`}
                 >
-                  {isSpeaking ? "Speaking" : audioError}
+                  {isSpeaking ? "Speaking..." : audioError}
                 </span>
-                {isSpeaking && (
-                  <Button
-                    onClick={stopSpeaking}
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-400 hover:text-red-300 hover:bg-gray-800 w-6 h-6 p-0 ml-2"
-                    title="Stop Speaking"
-                  >
-                    <VolumeX className="w-3 h-3" />
-                  </Button>
-                )}
               </div>
             </div>
           )}
 
           {/* Control Panel - Darker */}
-          <div className="bg-gray-900 border-t border-gray-800 p-3 md:p-4">
+          <div className="bg-slate-800 border-t border-slate-700 p-3 md:p-4 select-none" style={{ cursor: 'default', userSelect: 'none' }}>
             {/* Text Input */}
             <div className="flex items-center space-x-2 mb-3">
               <div className="relative flex-1">
@@ -633,15 +675,20 @@ const VoiceAssistant = () => {
                   onChange={(e) => setTextInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Type your message..."
-                  disabled={isThinking || isSpeaking}
-                  className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 pr-8 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                  disabled={isThinking || isSpeaking || isGeneratingAudio}
+                  className="w-full bg-gray-900 border border-slate-600 rounded-lg px-3 py-2 pr-8 text-sm text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50 caret-white disabled:caret-transparent select-text"
+                  style={{ 
+                    caretColor: isThinking || isSpeaking || isGeneratingAudio ? 'transparent' : 'white',
+                    userSelect: 'text',
+                    cursor: isThinking || isSpeaking || isGeneratingAudio ? 'not-allowed' : 'text'
+                  }}
                 />
                 {textInput && (
                   <Button
                     onClick={() => setTextInput("")}
                     variant="ghost"
                     size="sm"
-                    className="absolute right-1 top-1/2 transform -translate-y-1/2 w-5 h-5 md:w-6 md:h-6 p-0 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 w-5 h-5 md:w-6 md:h-6 p-0 text-slate-400 hover:text-white hover:bg-slate-600 rounded"
                     title="Clear Input"
                   >
                     <X className="w-2.5 h-2.5 md:w-3 md:h-3" />
@@ -650,8 +697,13 @@ const VoiceAssistant = () => {
               </div>
               <Button
                 onClick={sendTextMessage}
-                disabled={!textInput.trim() || isThinking || isSpeaking}
-                className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
+                disabled={
+                  !textInput.trim() ||
+                  isThinking ||
+                  isSpeaking ||
+                  isGeneratingAudio
+                }
+                className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-teal-600 hover:bg-teal-700 text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
               >
                 <Send className="w-3.5 h-3.5 md:w-4 md:h-4" />
               </Button>
@@ -661,8 +713,10 @@ const VoiceAssistant = () => {
             <div className="flex items-center justify-center space-x-3">
               <Button
                 onClick={startRecording}
-                disabled={isThinking || isSpeaking || isRecording}
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
+                disabled={
+                  isThinking || isSpeaking || isRecording || isGeneratingAudio
+                }
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-teal-600 hover:bg-teal-700 text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
                 title="Start Recording"
               >
                 <Mic className="w-4 h-4 md:w-5 md:h-5" />
@@ -680,12 +734,10 @@ const VoiceAssistant = () => {
             </div>
 
             <div className="text-center mt-2">
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-slate-500 select-none" style={{ userSelect: 'none' }}>
                 {isRecording
                   ? `Recording ${formatTime(recordingTime)}`
-                  : audioEnabled 
-                    ? "Type or record your message"
-                    : "Type your message (audio disabled)"
+                  : "Type or record your message"
                 }
               </p>
             </div>

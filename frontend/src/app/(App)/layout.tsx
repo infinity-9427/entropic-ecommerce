@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Footer } from "@/components/footer";
-import VoiceAssistant from "@/components/VoiceAssistant-RAG";
+import VoiceAssistant from "@/components/VoiceAssistant";
 
 export const metadata: Metadata = {
   title: "Entropic - Shop Amazing Products",

@@ -25,10 +25,12 @@ def start_server():
     
     # Check environment variables
     print("\n🔍 Environment Check:")
+    print(f"DATABASE_URL: {'✅' if os.getenv('DATABASE_URL') else '❌'}")
+    print(f"NEON_PSQL_URL: {'✅' if os.getenv('NEON_PSQL_URL') else '❌'}")
     print(f"SUPABASE_URL: {'✅' if os.getenv('SUPABASE_URL') else '❌'}")
     print(f"SUPABASE_API_KEY: {'✅' if os.getenv('SUPABASE_API_KEY') else '❌'}")
-    print(f"OPEN_ROUTER_API_KEY: {'✅' if os.getenv('OPEN_ROUTER_API_KEY') else '❌'}")
-    print(f"LLM_MODEL: {os.getenv('LLM_MODEL', 'Not set')}")
+    print(f"REDIS_URL: {'✅' if os.getenv('REDIS_URL') else '❌'}")
+    print(f"SECRET_KEY: {'✅' if os.getenv('SECRET_KEY') else '❌'}")
     
     # Test imports
     print("\n📦 Testing imports...")

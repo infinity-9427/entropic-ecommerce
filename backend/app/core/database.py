@@ -6,9 +6,9 @@ Hybrid approach: Neon for transactional data, Supabase for embeddings/search
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from typing import Optional
 import os
 
 # Load environment variables from backend/.env
@@ -23,7 +23,7 @@ DATABASE_URL = NEON_DATABASE_URL or os.getenv(
 
 print(f"Using database URL: {DATABASE_URL[:50]}...")
 
-# Supabase configuration for embeddings and real-time features
+# Supabase configuration for embeddings and vector search
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_API_KEY")
 
@@ -31,50 +31,25 @@ print(f"Supabase URL: {SUPABASE_URL}")
 print(f"Supabase Key: {'Set' if SUPABASE_KEY else 'Not set'}")
 
 # Initialize Supabase client
-supabase: Client = None
+supabase: Optional[Client] = None
 if SUPABASE_URL and SUPABASE_KEY:
     try:
         supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
         print("✅ Supabase client initialized successfully")
     except Exception as e:
         print(f"❌ Failed to initialize Supabase client: {e}")
+        supabase = None
 
-# For development, fallback to SQLite if PostgreSQL is not available
-if "postgresql" in DATABASE_URL and NEON_DATABASE_URL:
-    try:
-        engine = create_engine(
-            DATABASE_URL,
-            pool_pre_ping=True,
-            pool_recycle=300,
-            echo=False,  # Set to True for SQL query logging
-            # Enhanced connection pool settings for production
-            pool_size=20,
-            max_overflow=30,
-            pool_timeout=30
-        )
-        # Test connection
-        engine.connect()
-        print("✅ Connected to Neon PostgreSQL successfully")
-    except Exception as e:
-        print(f"❌ PostgreSQL connection failed: {e}")
-        print("Falling back to SQLite for development")
-        DATABASE_URL = "sqlite:///./entropic_ecommerce.db"
-        engine = create_engine(
-            DATABASE_URL,
-            connect_args={"check_same_thread": False},
-            poolclass=StaticPool,
-            echo=False
-        )
-else:
-    engine = create_engine(
-        DATABASE_URL,
-        pool_pre_ping=True,
-        pool_recycle=300,
-        echo=False,
-        pool_size=20,
-        max_overflow=30,
-        pool_timeout=30
-    )
+# Create database engine with connection pooling
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_recycle=300,
+    echo=False,  # Set to True for SQL query logging
+    pool_size=20,
+    max_overflow=30,
+    pool_timeout=30
+)
 
 # Create SessionLocal class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

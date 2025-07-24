@@ -3,7 +3,7 @@ Pydantic schemas for API request/response models
 """
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 from enum import Enum
 
@@ -101,11 +101,40 @@ class ProductUpdate(BaseModel):
     is_featured: Optional[bool] = None
     is_digital: Optional[bool] = None
 
-class ProductResponse(ProductBase):
+class ProductResponse(BaseModel):
     id: int
-    is_active: bool
+    name: str
+    description: Optional[str] = None
+    price: float
+    category: str
+    brand: Optional[str] = None
+    sku: Optional[str] = None
+    
+    # Flexible image handling - can be string URLs or structured objects
+    images: Optional[List[Union[str, ProductImage]]] = None
+    primary_image_url: Optional[str] = None
+    
+    # Inventory and pricing
+    stock_quantity: int
+    cost_price: Optional[float] = None
+    compare_at_price: Optional[float] = None
+    
+    # Product attributes
+    weight: Optional[float] = None
+    dimensions: Optional[Dict[str, float]] = None
+    tags: Optional[List[str]] = None
+    
+    # SEO and metadata
+    meta_title: Optional[str] = None
+    meta_description: Optional[str] = None
+    slug: Optional[str] = None
+    
+    # Product status with defaults for nullable fields
+    is_active: bool = True
+    is_featured: Optional[bool] = None
+    is_digital: Optional[bool] = None
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
     
     model_config = ConfigDict(from_attributes=True)
 

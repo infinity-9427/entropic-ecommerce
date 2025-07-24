@@ -1,353 +1,424 @@
 """
-Enhanced Vector Search Service using Supabase for product embeddings
-Handles embedding generation and advanced similarity search for products
-Inspired by TimescaleDB vector patterns with Supabase adaptations
+Vector Database Service using Supabase pgvector
+Handles embedding generation and vector similarity search for products
 """
 
 import os
-import openai
-from typing import List, Dict, Any, Optional, Tuple, Union
-from datetime import datetime
-from supabase import Client
-try:
-    from ..core.database import get_supabase
-except ImportError:
-    from app.core.database import get_supabase
 import json
-import logging
+import numpy as np
 import time
+from typing import List, Dict, Any, Optional, Tuple
+from sentence_transformers import SentenceTransformer
+from supabase import create_client, Client
+import logging
+from app.models import Product
+from sqlalchemy.orm import Session
 
-class ProductVectorStore:
-    """Enhanced vector store for e-commerce product search with advanced filtering"""
-    
+logger = logging.getLogger(__name__)
+
+class VectorService:
     def __init__(self):
-        try:
-            self.supabase: Client = get_supabase()
-            self.available = True
-        except Exception as e:
-            print(f"Vector search unavailable: {e}")
-            self.supabase = None
-            self.available = False
-            
-        # Use OpenRouter API for embeddings (following your pattern)
-        if os.getenv("OPEN_ROUTER_API_KEY"):
-            openai.api_key = os.getenv("OPEN_ROUTER_API_KEY")
-            openai.api_base = "https://openrouter.ai/api/v1"
+        """Initialize the vector service with Supabase client and embedding model"""
+        # Initialize Supabase client
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_API_KEY")
         
-        self.embedding_model = os.getenv("LLM_MODEL", "text-embedding-3-small")
-        self.table_name = "product_embeddings"
+        if not supabase_url or not supabase_key:
+            raise ValueError("SUPABASE_URL and SUPABASE_API_KEY must be set in environment variables")
         
-    def get_embedding(self, text: str) -> List[float]:
-        """Generate embedding for given text (following your timing pattern)"""
-        if not self.available:
-            return [0.0] * 1536
-            
-        try:
-            text = text.replace("\n", " ")
-            start_time = time.time()
-            
-            # Updated for OpenAI 1.0+ API
-            from openai import OpenAI
-            client = OpenAI(
-                api_key=os.getenv("OPEN_ROUTER_API_KEY"),
-                base_url="https://openrouter.ai/api/v1"
-            )
-            
-            response = client.embeddings.create(
-                input=[text],
-                model=self.embedding_model
-            )
-            embedding = response.data[0].embedding
-            
-            elapsed_time = time.time() - start_time
-            logging.info(f"Embedding generated in {elapsed_time:.3f} seconds")
-            return embedding
-            
-        except Exception as e:
-            print(f"Error generating embedding: {e}")
-            return [0.0] * 1536
+        self.supabase: Client = create_client(supabase_url, supabase_key)
+        
+        # Initialize sentence transformer model for embeddings
+        self.model = SentenceTransformer('all-MiniLM-L6-v2')  # Fast, efficient model
+        self.embedding_dimension = 384  # Dimension of all-MiniLM-L6-v2 model
+        
+        logger.info(f"Vector service initialized with model: {self.model}")
     
-    def store_product_embedding(self, product_data: Dict[str, Any]) -> bool:
-        """Store product embedding with enhanced metadata (following your prepare_record pattern)"""
-        if not self.available:
-            return False
-            
-        try:
-            # Create comprehensive searchable content
-            content_parts = [
-                f"Product: {product_data['name']}",
-                f"Description: {product_data.get('description', '')}",
-                f"Brand: {product_data.get('brand', '')}",
-                f"Category: {product_data.get('category', '')}",
-                f"Tags: {', '.join(product_data.get('tags', []))}",
-                f"Price: ${product_data.get('price', 0)}"
-            ]
-            content = "\n".join(filter(None, content_parts))
-            
-            # Generate embedding
-            embedding = self.get_embedding(content)
-            
-            # Enhanced metadata following your structure
-            metadata = {
-                "product_id": product_data['id'],
-                "name": product_data['name'],
-                "category": product_data.get('category'),
-                "brand": product_data.get('brand'),
-                "price": product_data.get('price'),
-                "tags": product_data.get('tags', []),
-                "is_featured": product_data.get('is_featured', False),
-                "stock_quantity": product_data.get('stock_quantity', 0),
-                "created_at": datetime.now().isoformat(),
-            }
-            
-            # Store in Supabase
-            result = self.supabase.table(self.table_name).insert({
-                'product_id': product_data['id'],
-                'content': content,
-                'embedding': embedding,
-                'metadata': metadata
-            }).execute()
-            
-            return True
-        except Exception as e:
-            print(f"Error storing product embedding: {e}")
-            return False
-    
-    def search(
-        self,
-        query_text: str,
-        limit: int = 10,
-        similarity_threshold: float = 0.7,
-        metadata_filter: Optional[Dict[str, Any]] = None,
-        category_filter: Optional[str] = None,
-        brand_filter: Optional[str] = None,
-        price_range: Optional[Tuple[float, float]] = None,
-        in_stock_only: bool = False,
-        featured_only: bool = False,
-        return_products: bool = True
-    ) -> List[Dict[str, Any]]:
+    def create_product_embedding(self, product: Product) -> np.ndarray:
         """
-        Advanced product search with multiple filtering options
+        Create embedding for a product based on its text content
         
         Args:
-            query_text: Search query
-            limit: Maximum results to return
-            similarity_threshold: Minimum similarity score
-            metadata_filter: Custom metadata filters
-            category_filter: Filter by product category
-            brand_filter: Filter by brand
-            price_range: Tuple of (min_price, max_price)
-            in_stock_only: Only return products in stock
-            featured_only: Only return featured products
-            return_products: Return full product data vs just embeddings
+            product: Product object from database
             
-        Examples:
-            Basic search:
-                search("wireless headphones")
-            
-            Category-specific search:
-                search("bluetooth speaker", category_filter="Electronics")
-            
-            Price-filtered search:
-                search("laptop", price_range=(500, 1500))
-            
-            Complex filtering:
-                search("phone", 
-                      brand_filter="Apple", 
-                      price_range=(800, 1200),
-                      in_stock_only=True,
-                      featured_only=True)
+        Returns:
+            numpy array of embeddings
         """
-        if not self.available:
-            return []
+        # Combine product information into a single text
+        product_text = self._prepare_product_text(product)
+        
+        # Generate embedding
+        embedding = self.model.encode(product_text)
+        return embedding
+    
+    def _prepare_product_text(self, product: Product) -> str:
+        """
+        Prepare product text for embedding generation
+        
+        Args:
+            product: Product object
             
+        Returns:
+            Combined text representation of the product
+        """
+        text_parts = []
+        
+        # Add product name (most important)
+        if hasattr(product, 'name') and product.name is not None:
+            text_parts.append(f"Product: {product.name}")
+        
+        # Add category
+        if hasattr(product, 'category') and product.category is not None:
+            text_parts.append(f"Category: {product.category}")
+        
+        # Add brand
+        if hasattr(product, 'brand') and product.brand is not None:
+            text_parts.append(f"Brand: {product.brand}")
+        
+        # Add description
+        if hasattr(product, 'description') and product.description is not None:
+            text_parts.append(f"Description: {product.description}")
+        
+        # Add price information
+        if hasattr(product, 'price') and product.price is not None:
+            text_parts.append(f"Price: ${product.price}")
+        
+        # Add tags if available
+        if hasattr(product, 'tags') and product.tags is not None:
+            if isinstance(product.tags, list):
+                text_parts.append(f"Tags: {', '.join(product.tags)}")
+            elif isinstance(product.tags, str):
+                text_parts.append(f"Tags: {product.tags}")
+        
+        # Combine all parts
+        return " | ".join(text_parts)
+    
+    def store_product_embedding(self, product: Product, embedding: np.ndarray) -> bool:
+        """
+        Store product embedding in Supabase vector database
+        
+        Args:
+            product: Product object
+            embedding: numpy array of embeddings
+            
+        Returns:
+            True if successful, False otherwise
+        """
         try:
-            start_time = time.time()
+            # Convert numpy array to list for JSON serialization
+            embedding_list = embedding.tolist()
             
-            # Generate query embedding
-            query_embedding = self.get_embedding(query_text)
-            
-            # Build the RPC call with similarity search
-            rpc_params = {
-                'query_embedding': query_embedding,
-                'match_threshold': similarity_threshold,
-                'match_count': limit
+            # Prepare product data for vector storage
+            vector_data = {
+                "product_id": product.id,
+                "name": product.name,
+                "category": product.category,
+                "description": product.description,
+                "price": float(product.price) if product.price is not None else 0,
+                "embedding": embedding_list,
+                "text_content": self._prepare_product_text(product)
             }
             
-            # Execute similarity search
-            result = self.supabase.rpc('match_products', rpc_params).execute()
+            # Upsert data to Supabase (insert or update if exists)
+            result = self.supabase.table("product_embeddings").upsert(vector_data).execute()
+            
+            if result.data:
+                logger.info(f"Successfully stored embedding for product {product.id}")
+                return True
+            else:
+                logger.error(f"Failed to store embedding for product {product.id}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error storing embedding for product {product.id}: {str(e)}")
+            return False
+    
+    def search_similar_products(self, query: str, limit: int = 5, threshold: float = 0.7, category_filter: Optional[str] = None, price_range: Optional[Tuple[float, float]] = None) -> List[Dict[str, Any]]:
+        """
+        Enhanced search for products similar to the query with advanced filtering
+        Uses cosine similarity on stored embeddings
+        
+        Args:
+            query: Search query text
+            limit: Maximum number of results to return
+            threshold: Minimum similarity threshold (0-1)
+            category_filter: Optional category to filter by
+            price_range: Optional price range tuple (min_price, max_price)
+            
+        Returns:
+            List of similar products with similarity scores and metadata
+        """
+        try:
+            # Generate embedding for the query
+            query_embedding = self.model.encode(query)
+            
+            # Get all embeddings from Supabase
+            result = self.supabase.table('product_embeddings').select('*').execute()
             
             if not result.data:
                 return []
             
-            # Apply additional filters (simulating your predicates pattern)
-            filtered_results = self._apply_filters(
-                result.data,
-                metadata_filter=metadata_filter,
-                category_filter=category_filter,
-                brand_filter=brand_filter,
-                price_range=price_range,
-                in_stock_only=in_stock_only,
-                featured_only=featured_only
-            )
+            products_with_similarity = []
             
-            elapsed_time = time.time() - start_time
-            logging.info(f"Vector search completed in {elapsed_time:.3f} seconds")
+            for product in result.data:
+                try:
+                    # Parse stored embedding
+                    stored_embedding = json.loads(product['embedding_json'])
+                    stored_array = np.array(stored_embedding)
+                    
+                    # Calculate cosine similarity
+                    similarity = np.dot(query_embedding, stored_array) / (
+                        np.linalg.norm(query_embedding) * np.linalg.norm(stored_array)
+                    )
+                    
+                    # Apply filters
+                    if category_filter and product.get('category', '').lower() != category_filter.lower():
+                        continue
+                        
+                    if price_range:
+                        product_price = float(product.get('price', 0))
+                        if not (price_range[0] <= product_price <= price_range[1]):
+                            continue
+                    
+                    # Apply threshold
+                    if similarity >= threshold:
+                        product_dict = {
+                            'id': product['product_id'],
+                            'name': product['name'],
+                            'description': product['description'],
+                            'category': product['category'],
+                            'price': product['price'],
+                            'brand': product['brand'],
+                            'image_url': product['image_url'],
+                            'similarity': float(similarity),
+                            'metadata': {
+                                'is_active': product['is_active'],
+                                'created_at': product['created_at']
+                            }
+                        }
+                        products_with_similarity.append(product_dict)
+                        
+                except Exception as e:
+                    print(f"Error processing product {product.get('product_id')}: {e}")
+                    continue
             
-            if return_products:
-                return self._enrich_with_product_data(filtered_results)
+            # Sort by similarity and limit results
+            products_with_similarity.sort(key=lambda x: x['similarity'], reverse=True)
+            return products_with_similarity[:limit]
+            
+        except Exception as e:
+            print(f"❌ Error in similarity search: {e}")
+            return []
+    
+    def search_products_by_category(self, category: str, query: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Search for products within a specific category using vector similarity
+        
+        Args:
+            category: Product category to filter by
+            query: Search query text
+            limit: Maximum number of results to return
+            
+        Returns:
+            List of similar products in the specified category
+        """
+        try:
+            # Generate embedding for the query
+            query_embedding = self.model.encode(query)
+            query_embedding_list = query_embedding.tolist()
+            
+            # Search with category filter
+            result = self.supabase.rpc(
+                "search_products_by_category",
+                {
+                    "query_embedding": query_embedding_list,
+                    "category_filter": category,
+                    "match_count": limit
+                }
+            ).execute()
+            
+            if result.data:
+                logger.info(f"Found {len(result.data)} products in category '{category}' for query: {query}")
+                return result.data
             else:
-                return filtered_results
+                logger.info(f"No products found in category '{category}' for query: {query}")
+                return []
                 
         except Exception as e:
-            print(f"Error searching products: {e}")
+            logger.error(f"Error searching products by category: {str(e)}")
             return []
     
-    def _apply_filters(
-        self, 
-        results: List[Dict], 
-        metadata_filter: Optional[Dict] = None,
-        category_filter: Optional[str] = None,
-        brand_filter: Optional[str] = None,
-        price_range: Optional[Tuple[float, float]] = None,
-        in_stock_only: bool = False,
-        featured_only: bool = False
-    ) -> List[Dict]:
-        """Apply advanced filtering to search results (following your predicates pattern)"""
+    def get_product_recommendations(self, product_id: int, limit: int = 5) -> List[Dict[str, Any]]:
+        """
+        Get product recommendations based on a specific product
         
-        filtered = []
-        
-        for result in results:
-            metadata = result.get('metadata', {})
+        Args:
+            product_id: ID of the product to base recommendations on
+            limit: Maximum number of recommendations to return
             
-            # Category filter
-            if category_filter and metadata.get('category') != category_filter:
-                continue
-                
-            # Brand filter
-            if brand_filter and metadata.get('brand') != brand_filter:
-                continue
-                
-            # Price range filter
-            if price_range:
-                price = metadata.get('price', 0)
-                if not (price_range[0] <= price <= price_range[1]):
-                    continue
-            
-            # Stock filter
-            if in_stock_only and metadata.get('stock_quantity', 0) <= 0:
-                continue
-                
-            # Featured filter
-            if featured_only and not metadata.get('is_featured', False):
-                continue
-                
-            # Custom metadata filter
-            if metadata_filter:
-                match = True
-                for key, value in metadata_filter.items():
-                    if metadata.get(key) != value:
-                        match = False
-                        break
-                if not match:
-                    continue
-            
-            filtered.append(result)
-        
-        return filtered
-    
-    def _enrich_with_product_data(self, results: List[Dict]) -> List[Dict]:
-        """Enrich search results with full product data from main database"""
+        Returns:
+            List of recommended products
+        """
         try:
-            from ..core.database import SessionLocal
-        except ImportError:
-            from app.core.database import SessionLocal
-        from models import Product
+            # Get the product embedding from database
+            result = self.supabase.table("product_embeddings").select("*").eq("product_id", product_id).execute()
+            
+            if not result.data:
+                logger.warning(f"Product {product_id} not found in embeddings database")
+                return []
+            
+            product_embedding = result.data[0]["embedding"]
+            
+            # Find similar products (excluding the original product)
+            similar_result = self.supabase.rpc(
+                "get_product_recommendations",
+                {
+                    "target_product_id": product_id,
+                    "query_embedding": product_embedding,
+                    "match_count": limit
+                }
+            ).execute()
+            
+            if similar_result.data:
+                logger.info(f"Found {len(similar_result.data)} recommendations for product {product_id}")
+                return similar_result.data
+            else:
+                logger.info(f"No recommendations found for product {product_id}")
+                return []
+                
+        except Exception as e:
+            logger.error(f"Error getting recommendations for product {product_id}: {str(e)}")
+            return []
+    
+    def search_with_metadata_filters(self, query: str, metadata_filters: Dict[str, Any], limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Search products with advanced metadata filtering
+        Similar to your metadata filtering approach
         
+        Args:
+            query: Search query text
+            metadata_filters: Dictionary of metadata filters
+            limit: Maximum number of results
+            
+        Returns:
+            List of filtered products
+        """
+        try:
+            # Generate embedding for the query
+            query_embedding = self.model.encode(query)
+            query_embedding_list = query_embedding.tolist()
+            
+            # Build filter conditions
+            category_filter = metadata_filters.get('category')
+            price_range = metadata_filters.get('price_range')
+            brand_filter = metadata_filters.get('brand')
+            
+            # Use appropriate search function based on filters
+            if category_filter and price_range and brand_filter:
+                # Complex multi-filter search
+                result = self.supabase.rpc(
+                    "search_products_complex",
+                    {
+                        "query_embedding": query_embedding_list,
+                        "match_count": limit,
+                        "category_filter": category_filter,
+                        "min_price": price_range[0] if price_range else 0,
+                        "max_price": price_range[1] if price_range else 999999,
+                        "brand_filter": brand_filter
+                    }
+                ).execute()
+            else:
+                # Use the enhanced search we already have
+                result = self.supabase.rpc(
+                    "search_products_advanced",
+                    {
+                        "query_embedding": query_embedding_list,
+                        "match_threshold": 0.5,
+                        "match_count": limit,
+                        "category_filter": category_filter,
+                        "min_price": price_range[0] if price_range else 0,
+                        "max_price": price_range[1] if price_range else 999999
+                    }
+                ).execute()
+            
+            if result.data:
+                # Add metadata information to results
+                enhanced_results = []
+                for product in result.data:
+                    enhanced_product = dict(product)
+                    enhanced_product['filter_metadata'] = {
+                        'matched_filters': metadata_filters,
+                        'filter_count': len([f for f in metadata_filters.values() if f is not None])
+                    }
+                    enhanced_results.append(enhanced_product)
+                
+                logger.info(f"Metadata search found {len(enhanced_results)} products")
+                return enhanced_results
+            else:
+                logger.info("No products found with metadata filters")
+                return []
+                
+        except Exception as e:
+            logger.error(f"Error in metadata search: {str(e)}")
+            return []
+    
+    def get_search_analytics(self, query: str, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Generate search analytics similar to your thought process tracking
+        
+        Args:
+            query: Original search query
+            results: Search results
+            
+        Returns:
+            Analytics dictionary with insights
+        """
         if not results:
-            return []
-            
-        product_ids = [r.get('product_id') for r in results]
+            return {
+                'query_analysis': query,
+                'result_count': 0,
+                'avg_similarity': 0,
+                'categories_found': [],
+                'price_range_found': None,
+                'search_insights': ['No matching products found', 'Consider broader search terms']
+            }
         
-        db = SessionLocal()
-        try:
-            products = db.query(Product).filter(Product.id.in_(product_ids)).all()
-            product_map = {p.id: p for p in products}
-            
-            enriched_results = []
-            for result in results:
-                product_id = result.get('product_id')
-                if product_id and product_id in product_map:
-                    product = product_map[product_id]
-                    enriched_results.append({
-                        'product': {
-                            'id': product.id,
-                            'name': product.name,
-                            'description': product.description,
-                            'price': product.price,
-                            'category': product.category,
-                            'brand': product.brand,
-                            'images': product.images,
-                            'primary_image_url': product.primary_image_url,
-                            'tags': product.tags,
-                            'is_featured': product.is_featured,
-                            'stock_quantity': product.stock_quantity
-                        },
-                        'similarity': result.get('similarity', 0),
-                        'relevance_content': result.get('content', '')
-                    })
-            
-            return enriched_results
-            
-        finally:
-            db.close()
-    
-    def search_by_category_insights(self, category: str, limit: int = 5) -> Dict[str, Any]:
-        """Generate category-specific insights (following your thought process pattern)"""
-        results = self.search(
-            f"popular products in {category}",
-            limit=limit,
-            category_filter=category,
-            featured_only=True
-        )
+        # Calculate analytics
+        similarities = [r.get('similarity', 0) for r in results]
+        avg_similarity = sum(similarities) / len(similarities)
+        max_similarity = max(similarities)
+        
+        categories = list(set(r.get('category', 'Unknown') for r in results))
+        prices = [r.get('price', 0) for r in results if r.get('price')]
+        price_range = (min(prices), max(prices)) if prices else None
+        
+        # Generate insights
+        insights = []
+        if avg_similarity > 0.8:
+            insights.append('High relevance matches found')
+        elif avg_similarity > 0.6:
+            insights.append('Good matches with moderate relevance')
+        else:
+            insights.append('Limited relevance - consider refining search')
+        
+        if len(categories) > 1:
+            insights.append(f'Results span {len(categories)} categories')
+        
+        if price_range:
+            insights.append(f'Price range: ${price_range[0]:.2f} - ${price_range[1]:.2f}')
         
         return {
-            "category": category,
-            "featured_products": results,
-            "insights": {
-                "total_found": len(results),
-                "avg_price": sum(r['product']['price'] for r in results) / len(results) if results else 0,
-                "brands": list(set(r['product']['brand'] for r in results if r['product']['brand'])),
-                "query_context": f"Category analysis for {category}"
-            }
+            'query_analysis': query,
+            'result_count': len(results),
+            'avg_similarity': avg_similarity,
+            'max_similarity': max_similarity,
+            'categories_found': categories,
+            'price_range_found': price_range,
+            'search_insights': insights
         }
-    
-    def update_product_embedding(self, product_id: int, product_data: Dict[str, Any]) -> bool:
-        """Update existing product embedding"""
-        if not self.available:
-            return False
-            
-        try:
-            # Delete existing embedding
-            self.supabase.table(self.table_name).delete().eq('product_id', product_id).execute()
-            
-            # Create new embedding
-            return self.store_product_embedding(product_data)
-        except Exception as e:
-            print(f"Error updating product embedding: {e}")
-            return False
-    
-    def delete_product_embedding(self, product_id: int) -> bool:
-        """Delete product embedding"""
-        if not self.available:
-            return False
-            
-        try:
-            self.supabase.table(self.table_name).delete().eq('product_id', product_id).execute()
-            return True
-        except Exception as e:
-            print(f"Error deleting product embedding: {e}")
-            return False
 
-# Initialize enhanced service
+# Alias for backward compatibility
+ProductVectorStore = VectorService
+
+# Create a global instance
 vector_search_service = ProductVectorStore()

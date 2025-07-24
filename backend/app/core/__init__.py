@@ -13,7 +13,7 @@ from .auth import (
 
 __all__ = [
     "get_db",
-    "get_supabase", 
+    "get_supabase",
     "SessionLocal",
     "Base",
     "create_tables",

@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { Product } from './data';
+import { Product } from './api';
 
 interface CartItem extends Product {
   quantity: number;
@@ -10,8 +10,8 @@ interface CartItem extends Product {
 interface CartStore {
   items: CartItem[];
   addToCart: (product: Product) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeFromCart: (productId: number) => void;
+  updateQuantity: (productId: number, quantity: number) => void;
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
@@ -37,13 +37,13 @@ export const useCartStore = create<CartStore>((set, get) => ({
     }
   },
   
-  removeFromCart: (productId: string) => {
+  removeFromCart: (productId: number) => {
     set({
       items: get().items.filter((item: CartItem) => item.id !== productId),
     });
   },
   
-  updateQuantity: (productId: string, quantity: number) => {
+  updateQuantity: (productId: number, quantity: number) => {
     if (quantity <= 0) {
       get().removeFromCart(productId);
       return;

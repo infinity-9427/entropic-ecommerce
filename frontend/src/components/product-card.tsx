@@ -5,9 +5,10 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Package } from 'lucide-react';
-import { Product } from '@/lib/data';
+import { Product } from '@/lib/api';
 import { useCartStore } from '@/lib/store';
 import { useState } from 'react';
+import { apiService } from '@/lib/api';
 
 interface ProductCardProps {
   product: Product;
@@ -25,24 +26,19 @@ export function ProductCard({ product }: ProductCardProps) {
     setImageError(true);
   };
 
-  // Get the image URL from either the new images array or the legacy image_url field
-  const getImageUrl = () => {
-    if (product.images && product.images.length > 0) {
-      return product.images[0].url;
-    }
-    return product.image_url || product.image;
-  };
+  // Get the primary image URL using the API service helper
+  const imageUrl = apiService.getProductImageUrl(product);
 
   return (
     <Card className="group overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col p-0 gap-0">
       <div className="aspect-square overflow-hidden bg-gray-100 flex items-center justify-center">
-        {imageError || !getImageUrl() ? (
+        {imageError || !imageUrl ? (
           <div className="w-full h-full bg-gray-100 flex items-center justify-center">
             <Package className="h-16 w-16 text-gray-400" />
           </div>
         ) : (
           <Image
-            src={getImageUrl()}
+            src={imageUrl}
             alt={product.name}
             width={300}
             height={300}
@@ -63,6 +59,11 @@ export function ProductCard({ product }: ProductCardProps) {
           <p className="text-xs text-muted-foreground line-clamp-2">
             {product.description}
           </p>
+          {product.brand && (
+            <p className="text-xs text-muted-foreground font-medium">
+              {product.brand}
+            </p>
+          )}
         </div>
         <div className="mt-4">
           <span className="font-bold text-lg">${product.price}</span>

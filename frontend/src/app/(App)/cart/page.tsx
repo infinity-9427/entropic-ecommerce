@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { useCartStore } from '@/lib/store';
+import { apiService } from '@/lib/api';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -49,7 +50,7 @@ export default function CartPage() {
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
                       <Image
-                        src={item.image}
+                        src={apiService.getProductImageUrl(item)}
                         alt={item.name}
                         width={80}
                         height={80}
@@ -65,7 +66,7 @@ export default function CartPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => updateQuantity(String(item.id), item.quantity - 1)}
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
@@ -73,7 +74,7 @@ export default function CartPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => updateQuantity(String(item.id), item.quantity + 1)}
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -83,7 +84,7 @@ export default function CartPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeFromCart(String(item.id))}
+                        onClick={() => removeFromCart(item.id)}
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />

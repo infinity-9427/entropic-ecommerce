@@ -29,8 +29,6 @@ class CloudinaryService:
         
         self.upload_preset = os.getenv("CLOUDINARY_UPLOAD_PRESET", "ecommerce")
         
-        # Log configuration (without sensitive data)
-        print(f"Cloudinary configured with cloud_name: {os.getenv('CLOUDINARY_CLOUD_NAME')}")
     
     async def upload_product_image(self, file: UploadFile, product_id: int) -> Dict[str, Any]:
         """

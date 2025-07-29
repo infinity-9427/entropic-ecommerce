@@ -21,14 +21,11 @@ DATABASE_URL = NEON_DATABASE_URL or os.getenv(
     "postgresql://entropic_user:entropic_password@localhost:5432/entropic_db"
 )
 
-print(f"Using database URL: {DATABASE_URL[:50]}...")
 
 # Supabase configuration for embeddings and vector search
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_API_KEY")
 
-print(f"Supabase URL: {SUPABASE_URL}")
-print(f"Supabase Key: {'Set' if SUPABASE_KEY else 'Not set'}")
 
 # Initialize Supabase client
 supabase: Optional[Client] = None

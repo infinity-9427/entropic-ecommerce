@@ -163,7 +163,17 @@ class VectorService:
             for product in result.data:
                 try:
                     # Parse stored embedding
-                    stored_embedding = json.loads(product['embedding_json'])
+                    if 'embedding_json' in product:
+                        stored_embedding = product['embedding_json']
+                    elif 'embedding' in product:
+                        stored_embedding = product['embedding']
+                    else:
+                        continue
+                    
+                    # Handle both direct array and JSON string formats
+                    if isinstance(stored_embedding, str):
+                        stored_embedding = json.loads(stored_embedding)
+                    
                     stored_array = np.array(stored_embedding)
                     
                     # Calculate cosine similarity
@@ -188,12 +198,12 @@ class VectorService:
                             'description': product['description'],
                             'category': product['category'],
                             'price': product['price'],
-                            'brand': product['brand'],
-                            'image_url': product['image_url'],
+                            'brand': product.get('brand', 'Unknown'),
+                            'image_url': product.get('image_url', ''),
                             'similarity': float(similarity),
                             'metadata': {
-                                'is_active': product['is_active'],
-                                'created_at': product['created_at']
+                                'is_active': product.get('is_active', True),
+                                'created_at': product.get('created_at', '')
                             }
                         }
                         products_with_similarity.append(product_dict)

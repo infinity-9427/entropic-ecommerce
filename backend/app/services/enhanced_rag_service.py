@@ -14,7 +14,7 @@ from supabase import create_client, Client
 import numpy as np
 from datetime import datetime
 
-from app.services.vector_service import VectorService
+from app.services.neon_vector_service import NeonVectorService
 from app.services.prompt_templates import ECommercePromptTemplates, PromptType, PromptFormatter
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class EnhancedRAGService:
         """Initialize Enhanced RAG service with Ollama and vector search capabilities"""
         
         # Initialize vector service for product search
-        self.vector_service = VectorService()
+        self.vector_service = NeonVectorService()
         
         # Initialize Ollama client configuration
         self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
@@ -40,7 +40,7 @@ class EnhancedRAGService:
         self.prompt_formatter = PromptFormatter()
         
         # Configuration parameters
-        self.default_similarity_threshold = 0.6
+        self.default_similarity_threshold = 0.2  # Lowered for better product discovery
         self.max_products_to_retrieve = 10
         self.max_context_length = 4000
         
@@ -320,6 +320,38 @@ class EnhancedRAGService:
         base_query = query.lower()
         expanded = []
         
+        # Essential product synonyms and related terms
+        synonyms = {
+            # Computer-related terms
+            "computer": ["laptop", "pc", "notebook", "ultrabook", "gaming laptop"],
+            "laptop": ["computer", "notebook", "ultrabook", "pc"],
+            "pc": ["computer", "laptop", "desktop"],
+            
+            # Audio/Music-related terms  
+            "music": ["headphones", "audio", "speaker", "sound", "wireless headphones", "bluetooth speaker"],
+            "audio": ["headphones", "speaker", "sound", "music", "wireless headphones"],
+            "listen": ["headphones", "audio", "speaker", "music", "wireless headphones"],
+            "sound": ["headphones", "speaker", "audio", "music", "wireless headphones"],
+            "hear": ["headphones", "audio", "speaker", "music"],
+            
+            # Gaming-related terms
+            "gaming": ["mouse", "keyboard", "laptop", "monitor", "headphones"],
+            "game": ["gaming", "mouse", "keyboard", "laptop", "monitor"],
+            
+            # Phone-related terms
+            "phone": ["smartphone", "mobile", "cell phone"],
+            "smartphone": ["phone", "mobile"],
+            
+            # General tech terms
+            "wireless": ["headphones", "mouse", "speaker", "bluetooth"],
+            "bluetooth": ["headphones", "speaker", "wireless"],
+        }
+        
+        # Add direct synonyms
+        for term, synonyms_list in synonyms.items():
+            if term in base_query:
+                expanded.extend(synonyms_list)
+        
         # Category-based expansion
         category = intent["entities"].get("category")
         if category == "electronics":
@@ -343,7 +375,9 @@ class EnhancedRAGService:
             expanded.append(f"affordable {query}")
             expanded.append(f"budget {query}")
         
-        return expanded[:3]  # Limit to prevent too many searches
+        # Remove duplicates and limit results
+        expanded = list(set(expanded))
+        return expanded[:5]  # Increased limit for better coverage
     
     def _apply_intent_based_filtering(self, products: List[Dict[str, Any]], 
                                     intent: Dict[str, Any], search_params: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -406,22 +440,22 @@ class EnhancedRAGService:
         
         thought_process.append(f"Found {len(products)} products with similarity range {min_similarity:.2f}-{max_similarity:.2f}")
         
-        # Evaluate context sufficiency
+        # Evaluate context sufficiency  
         sufficient_context = True
         confidence_level = "high"
         recommendation_strategy = "direct_recommendation"
         
-        if max_similarity < 0.3:
-            thought_process.append("Low similarity scores suggest poor query-product match")
+        if max_similarity < 0.15:  # Lowered threshold for better product discovery
+            thought_process.append("Very low similarity scores suggest poor query-product match")
             sufficient_context = False
             confidence_level = "very_low"
             recommendation_strategy = "query_clarification"
-        elif max_similarity < 0.6:
-            thought_process.append("Moderate similarity scores - providing best available matches")
+        elif max_similarity < 0.4:  # Adjusted thresholds
+            thought_process.append("Moderate similarity scores - providing best available matches with confidence")
             confidence_level = "medium"
-            recommendation_strategy = "cautious_recommendation"
+            recommendation_strategy = "confident_recommendation"  # More confident with lower similarities
         else:
-            thought_process.append("High similarity scores indicate good matches")
+            thought_process.append("High similarity scores indicate excellent matches")
             confidence_level = "high"
             recommendation_strategy = "confident_recommendation"
         

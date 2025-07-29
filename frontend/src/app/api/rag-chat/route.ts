@@ -5,26 +5,32 @@ interface ChatRequest {
   context_type?: string;
 }
 
-interface RAGSearchResponse {
+interface EnhancedRAGResponse {
+  success: boolean;
+  query: string;
+  intent: string;
   products: Array<{
-    id: string;
+    id?: string;
+    product_id?: number;
     name: string;
     category: string;
     description: string;
     price: number;
-    brand: string;
-    image_url: string;
+    brand?: string;
+    image_url?: string;
     similarity: number;
-    metadata: {
-      is_active: boolean;
-      created_at: string;
-    };
   }>;
-  ai_insights: string;
-  query: string;
-  category: string | null;
-  total_found: number;
-  success: boolean;
+  ai_response: string;
+  confidence: number;
+  context_analysis: {
+    sufficient_context: boolean;
+    confidence_level: string;
+    recommendation_strategy: string;
+  };
+  search_params: Record<string, any>;
+  processing_time: number;
+  products_found: number;
+  thought_process: string[];
 }
 
 export async function POST(request: NextRequest) {
@@ -41,40 +47,70 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call our backend RAG system using the working search endpoint
+    // Call our enhanced RAG system using the enhanced endpoint
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
-    const ragResponse = await fetch(`${backendUrl}/rag/search`, {
+    const ragResponse = await fetch(`${backendUrl}/rag/enhanced`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         query: body.query,
-        limit: 5
+        limit: 5,
+        threshold: 0.5
       }),
     });
 
     if (!ragResponse.ok) {
-      console.error('RAG system error:', ragResponse.status, ragResponse.statusText);
+      console.error('Enhanced RAG system error:', ragResponse.status, ragResponse.statusText);
       
-      // Fallback response if RAG system is down
-      return NextResponse.json({
-        response: `I understand you're asking about "${body.query}". While I'm having some technical difficulties right now, I'd be happy to help you browse our products or you can contact our customer service team for immediate assistance.`,
-        products_found: 0,
-        similar_products: [],
-        context_type: body.context_type || 'general',
-        success: true
-      });
+      // NO FALLBACK RESPONSES - Return error for debugging
+      return NextResponse.json(
+        {
+          response: 'RAG system is currently unavailable. Please check the backend service.',
+          products_found: 0,
+          similar_products: [],
+          context_type: 'error',
+          success: false,
+          error: `Backend error: ${ragResponse.status} ${ragResponse.statusText}`
+        },
+        { status: 503 }
+      );
     }
 
-    const ragData: RAGSearchResponse = await ragResponse.json();
+    const ragData: EnhancedRAGResponse = await ragResponse.json();
 
-    // Map the search response to the expected chat response format
+    // Validate that we got real data (no fallbacks)
+    if (!ragData.success) {
+      return NextResponse.json(
+        {
+          response: 'Enhanced RAG service failed to process the request.',
+          products_found: 0,
+          similar_products: [],
+          context_type: 'error',
+          success: false,
+          error: 'Enhanced RAG service returned unsuccessful response'
+        },
+        { status: 500 }
+      );
+    }
+
+    // Map the enhanced RAG response to the expected chat response format
     const chatResponse = {
-      response: ragData.ai_insights,
-      products_found: ragData.total_found,
-      similar_products: ragData.products.map(product => ({
-        product_id: parseInt(product.id),
+      response: ragData.ai_response,
+      products_found: ragData.products_found,
+      similar_products: ragData.products.map((product: {
+        id?: string;
+        product_id?: number;
+        name: string;
+        category: string;
+        description: string;
+        price: number;
+        brand?: string;
+        image_url?: string;
+        similarity: number;
+      }) => ({
+        product_id: product.product_id || product.id || 0,
         name: product.name,
         category: product.category,
         description: product.description,
@@ -83,8 +119,10 @@ export async function POST(request: NextRequest) {
         brand: product.brand,
         image_url: product.image_url
       })),
-      context_type: body.context_type || 'search',
-      success: ragData.success
+      context_type: body.context_type || ragData.intent,
+      success: ragData.success,
+      confidence: ragData.confidence,
+      processing_time: ragData.processing_time
     };
 
     return NextResponse.json(chatResponse);
@@ -94,12 +132,12 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json(
       {
-        response: 'I apologize, but I\'m experiencing some technical difficulties. Please try again in a moment or contact our customer support team.',
+        response: 'Enhanced RAG system encountered an error. Please check the backend logs for details.',
         products_found: 0,
         similar_products: [],
         context_type: 'error',
         success: false,
-        error: 'Internal server error'
+        error: 'Internal server error in enhanced RAG processing'
       },
       { status: 500 }
     );
@@ -109,16 +147,31 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json(
     {
-      message: 'RAG Chat API is running',
+      message: 'Enhanced RAG Chat API is running',
+      backend_integration: 'Enhanced RAG Service with Ollama Llama3',
       endpoints: {
         chat: 'POST /api/rag-chat',
-        description: 'Send a query to the AI shopping assistant powered by RAG and vector search'
+        description: 'Send a query to the enhanced AI shopping assistant powered by Ollama Llama3 and vector search'
       },
+      features: [
+        'Local Ollama Llama3 integration',
+        'Neon PostgreSQL with pgvector search',
+        'Intent analysis and context evaluation',
+        'No fallback responses - real AI only',
+        'Confidence scoring and thought process'
+      ],
       usage: {
         method: 'POST',
         body: {
           query: 'string (required) - Your question or search query',
           context_type: 'string (optional) - recommendation, comparison, general, inquiry'
+        },
+        response: {
+          response: 'AI-generated response from Ollama',
+          products_found: 'Number of relevant products',
+          similar_products: 'Array of matching products with similarity scores',
+          confidence: 'Response confidence score (0-1)',
+          processing_time: 'Time taken to process request'
         }
       }
     }

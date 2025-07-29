@@ -44,6 +44,9 @@ interface RAGResponse {
   similar_products: ProductResult[];
   context_type: string;
   success: boolean;
+  confidence?: number;
+  processing_time?: number;
+  error?: string;
 }
 
 const VoiceAssistant = () => {
@@ -209,13 +212,14 @@ const VoiceAssistant = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response from RAG system');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `RAG system error: ${response.status} ${response.statusText}`);
       }
 
       const data: RAGResponse = await response.json();
 
       if (!data.success) {
-        throw new Error('RAG system returned error');
+        throw new Error(data.error || 'Enhanced RAG system returned unsuccessful response');
       }
 
       // Generate audio if supported
@@ -237,6 +241,18 @@ const VoiceAssistant = () => {
         context_type: data.context_type,
       };
 
+      // Add confidence and processing time info if available
+      if (data.confidence !== undefined || data.processing_time !== undefined) {
+        let debugInfo = '';
+        if (data.confidence !== undefined) {
+          debugInfo += ` (Confidence: ${Math.round(data.confidence * 100)}%)`;
+        }
+        if (data.processing_time !== undefined) {
+          debugInfo += ` (${data.processing_time.toFixed(2)}s)`;
+        }
+        assistantMessage.content += debugInfo;
+      }
+
       setMessages((prev) => [...prev, assistantMessage]);
       setIsThinking(false);
     } catch (error) {
@@ -246,7 +262,7 @@ const VoiceAssistant = () => {
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         type: "assistant",
-        content: "I'm experiencing technical difficulties. Please try again in a moment.",
+        content: `I'm having trouble connecting to the enhanced RAG system. Error: ${error instanceof Error ? error.message : 'Unknown error'}. Please check that the backend service is running and Ollama is available.`,
         timestamp: new Date(),
       };
 

@@ -219,58 +219,62 @@ async def search_products_vector(
     in_stock_only: bool = False,
     featured_only: bool = False
 ):
-    """Enhanced vector search with advanced filtering (following TimescaleDB patterns)"""
+    """Basic product search - for advanced AI-powered search use /rag/enhanced"""
     try:
-        from app.services import ProductVectorStore
-        vector_search_service = ProductVectorStore()
+        # Use basic product service search instead of vector search
+        product_service = ProductService(db=next(get_db()))
+        products = product_service.search_products(query, category)
         
-        # Build price range if provided
-        price_range = None
-        if min_price is not None or max_price is not None:
-            price_range = (min_price or 0, max_price or float('inf'))
+        # Apply additional filters
+        if brand:
+            products = [p for p in products if p.brand and brand.lower() in p.brand.lower()]
+        if min_price is not None:
+            products = [p for p in products if p.price >= min_price]
+        if max_price is not None:
+            products = [p for p in products if p.price <= max_price]
+        if in_stock_only:
+            products = [p for p in products if p.inventory_count > 0]
+        if featured_only:
+            products = [p for p in products if p.is_featured]
         
-        # Execute enhanced search
-        results = vector_search_service.search(
-            query_text=query,
-            limit=limit,
-            similarity_threshold=similarity_threshold,
-            category_filter=category,
-            brand_filter=brand,
-            price_range=price_range,
-            in_stock_only=in_stock_only,
-            featured_only=featured_only,
-            return_products=True
-        )
+        # Limit results
+        products = products[:limit]
         
         return {
             "query": query,
             "filters": {
                 "category": category,
                 "brand": brand,
-                "price_range": price_range,
+                "min_price": min_price,
+                "max_price": max_price,
                 "in_stock_only": in_stock_only,
                 "featured_only": featured_only
             },
-            "results": results,
-            "count": len(results),
-            "similarity_threshold": similarity_threshold
+            "results": [{"id": p.id, "name": p.name, "price": p.price, "category": p.category} for p in products],
+            "count": len(products),
+            "note": "For AI-powered search with vector similarity, use /rag/enhanced"
         }
     except Exception as e:
         return {
             "query": query,
             "results": [],
             "count": 0,
-            "error": f"Vector search error: {str(e)}"
+            "error": f"Search error: {str(e)}"
         }
 
 @app.get("/products/search/category/{category}/insights")
 async def get_category_insights(category: str, limit: int = 5):
-    """Get category-specific insights and recommendations"""
+    """Basic category insights - for AI-powered insights use /rag/enhanced"""
     try:
-        from app.services import ProductVectorStore
-        vector_search_service = ProductVectorStore()
-        insights = vector_search_service.search_by_category_insights(category, limit)
-        return insights
+        product_service = ProductService(db=next(get_db()))
+        products = product_service.get_products(category=category, limit=limit)
+        
+        return {
+            "category": category,
+            "insights": f"Found {len(products)} products in {category} category",
+            "top_products": [{"id": p.id, "name": p.name, "price": p.price} for p in products[:limit]],
+            "note": "For AI-powered category insights, use /rag/enhanced"
+        }
     except Exception as e:
         return {
             "category": category,

@@ -159,11 +159,7 @@ Thumbs.db
 *.swo
 *~
 
-# Documentation - Keep APP_FLOW_DOCUMENTATION.md in git
-# APP_FLOW_DOCUMENTATION.md should be tracked
 
-# Remove old MVP documentation
-MVP_BUDGET_DEPLOYMENT.md
 
 # Python
 __pycache__/
@@ -446,6 +442,6 @@ sitemap.xml.bak
 
 
 # docs
-MVP_BUDGET_DEPLOYMENT.md
-PRODUCTION_ROADMAP.md
+ENTROPIC_ECOMMERCE_ARCHITECTURE.md
 APP_FLOW_DOC.md
+OLLAMA_COMMANDS.md

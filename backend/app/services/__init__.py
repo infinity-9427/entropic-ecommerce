@@ -9,7 +9,6 @@ from .services import (
     OrderService,
     AnalyticsService
 )
-from .vector_search_service import ProductVectorStore
 from .cloudinary_service import CloudinaryService
 
 __all__ = [
@@ -18,6 +17,5 @@ __all__ = [
     "CartService",
     "OrderService",
     "AnalyticsService",
-    "ProductVectorStore",
     "CloudinaryService"
 ]

@@ -12,15 +12,12 @@ try:
     from .. import models, schemas
     from ..core import auth
     from .cloudinary_service import CloudinaryService
-    from .vector_search_service import ProductVectorStore
 except ImportError:
     from app import models, schemas
     from app.core import auth
     from app.services.cloudinary_service import CloudinaryService
-    from app.services.vector_search_service import ProductVectorStore
 
 # Service instances
-vector_search_service = ProductVectorStore()
 cloudinary_service = CloudinaryService()
 class UserService:
     def __init__(self, db: Session):
@@ -88,10 +85,9 @@ class ProductService:
                 'category': db_product.category,
                 'price': db_product.price
             }
-            # Store product embedding in background
-            vector_search_service.store_product_embedding(product_data)
+            # Vector embeddings are now handled by the enhanced RAG service
         except Exception as e:
-            print(f"Warning: Failed to create product embedding: {e}")
+            print(f"Warning: Failed to create product data: {e}")
         
         return db_product
 
@@ -118,9 +114,9 @@ class ProductService:
                 'category': db_product.category,
                 'price': db_product.price
             }
-            vector_search_service.update_product_embedding(product_id, product_data)
+            # Vector embeddings are now handled by the enhanced RAG service
         except Exception as e:
-            print(f"Warning: Failed to update product embedding: {e}")
+            print(f"Warning: Failed to update product data: {e}")
         
         return db_product
 

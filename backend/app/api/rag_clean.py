@@ -59,8 +59,11 @@ async def enhanced_rag_query(request: EnhancedRAGRequest) -> EnhancedRAGResponse
                 detail=f"Enhanced RAG failed: {result.get('error', 'Unknown error')}"
             )
         
-        # Note: We don't throw 404 for zero products - the AI can still provide helpful responses
-        # Even with 0 products found, we return a valid response with AI explanation
+        if result.get("products_found", 0) == 0:
+            raise HTTPException(
+                status_code=404,
+                detail="No products found matching the query criteria"
+            )
         
         # Verify we have a real AI response (not fallback)
         ai_response = result.get("ai_response", "")

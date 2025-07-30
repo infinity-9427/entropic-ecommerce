@@ -152,7 +152,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   ? 'bg-white/20' 
                   : 'bg-slate-700/50 group-hover:bg-slate-600/50'
               }`}>
-                <i className="ri-package-line text-lg"></i>
+                <i className="ri-store-line text-lg"></i>
               </div>
               <span className="font-medium">Products</span>
               {isActiveRoute('/dashboard/products') && (

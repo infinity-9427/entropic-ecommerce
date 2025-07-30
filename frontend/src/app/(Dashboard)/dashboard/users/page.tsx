@@ -107,48 +107,68 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Users</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-          Add New User
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Users</h1>
+          <p className="text-gray-600 flex items-center">
+            <i className="ri-group-line mr-2"></i>
+            Manage user accounts and permissions
+          </p>
+        </div>
+        <button className="bg-gradient-to-r from-pink-500 to-pink-600 text-white px-6 py-3 rounded-xl hover:from-pink-600 hover:to-pink-700 transition-all duration-200 shadow-lg shadow-pink-500/25 flex items-center space-x-2">
+          <i className="ri-user-add-line"></i>
+          <span>Add New User</span>
         </button>
       </div>
 
       {/* User Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg shadow-blue-500/25">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900">{(users || []).length}</p>
+              <p className="text-blue-100 text-sm font-medium">Total Users</p>
+              <p className="text-3xl font-bold">{(users || []).length}</p>
+              <p className="text-blue-100 text-xs mt-1">Registered members</p>
             </div>
-            <i className="ri-group-line text-3xl text-blue-500"></i>
+            <div className="bg-white/20 rounded-lg p-3">
+              <i className="ri-group-line text-2xl"></i>
+            </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        
+        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg shadow-emerald-500/25">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Active Users</p>
-              <p className="text-2xl font-bold text-green-600">{(users || []).filter(u => u?.is_active).length}</p>
+              <p className="text-emerald-100 text-sm font-medium">Active Users</p>
+              <p className="text-3xl font-bold">{(users || []).filter(u => u?.is_active).length}</p>
+              <p className="text-emerald-100 text-xs mt-1">Currently active</p>
             </div>
-            <i className="ri-user-check-line text-3xl text-green-500"></i>
+            <div className="bg-white/20 rounded-lg p-3">
+              <i className="ri-user-follow-line text-2xl"></i>
+            </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        
+        <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white shadow-lg shadow-red-500/25">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Inactive Users</p>
-              <p className="text-2xl font-bold text-red-600">{(users || []).filter(u => !u?.is_active).length}</p>
+              <p className="text-red-100 text-sm font-medium">Inactive Users</p>
+              <p className="text-3xl font-bold">{(users || []).filter(u => !u?.is_active).length}</p>
+              <p className="text-red-100 text-xs mt-1">Disabled accounts</p>
             </div>
-            <i className="ri-user-unfollow-line text-3xl text-red-500"></i>
+            <div className="bg-white/20 rounded-lg p-3">
+              <i className="ri-user-unfollow-line text-2xl"></i>
+            </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        
+        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg shadow-purple-500/25">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">New This Month</p>
-              <p className="text-2xl font-bold text-blue-600">
+              <p className="text-purple-100 text-sm font-medium">New This Month</p>
+              <p className="text-3xl font-bold">
                 {users.filter(u => {
                   const userDate = new Date(u.created_at)
                   const currentDate = new Date()
@@ -156,16 +176,24 @@ export default function UsersPage() {
                          userDate.getFullYear() === currentDate.getFullYear()
                 }).length}
               </p>
+              <p className="text-purple-100 text-xs mt-1">Recent signups</p>
             </div>
-            <i className="ri-calendar-check-line text-3xl text-purple-500"></i>
+            <div className="bg-white/20 rounded-lg p-3">
+              <i className="ri-calendar-check-line text-2xl"></i>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">User Management</h2>
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20">
+        <div className="p-6 border-b border-gray-200/50">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg flex items-center justify-center">
+              <i className="ri-settings-3-line text-white"></i>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">User Management</h2>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -190,18 +218,18 @@ export default function UsersPage() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {(users || []).map((user) => (
-                <tr key={user?.id || 'unknown'} className="hover:bg-gray-50">
+                <tr key={user?.id || 'unknown'} className="hover:bg-gray-50/80 transition-colors duration-200">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
-                          <span className="text-white font-medium">
+                      <div className="flex-shrink-0 h-12 w-12">
+                        <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+                          <span className="text-white font-semibold">
                             {user?.first_name?.charAt(0)?.toUpperCase() || 'U'}{user?.last_name?.charAt(0)?.toUpperCase() || 'U'}
                           </span>
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-semibold text-gray-900">
                           {user?.first_name || 'Unknown'} {user?.last_name || 'User'}
                         </div>
                         <div className="text-sm text-gray-500">ID: {user?.id || 'N/A'}</div>
@@ -248,20 +276,30 @@ export default function UsersPage() {
       </div>
 
       {/* User Growth Chart */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">User Registration Timeline</h2>
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20">
+        <div className="p-6 border-b border-gray-200/50">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
+              <i className="ri-line-chart-line text-white"></i>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">User Registration Timeline</h2>
+          </div>
         </div>
         <div className="p-6">
           <div className="space-y-4">
             {users.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Registration Stats</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Today:</span>
-                      <span className="text-sm font-medium">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200/50">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                      <i className="ri-bar-chart-box-line text-white text-sm"></i>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">Registration Stats</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Today:</span>
+                      <span className="text-sm font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
                         {users.filter(u => {
                           const userDate = new Date(u.created_at).toDateString()
                           const today = new Date().toDateString()
@@ -269,9 +307,9 @@ export default function UsersPage() {
                         }).length}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">This Week:</span>
-                      <span className="text-sm font-medium">
+                    <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">This Week:</span>
+                      <span className="text-sm font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">
                         {users.filter(u => {
                           const userDate = new Date(u.created_at)
                           const weekAgo = new Date()
@@ -280,9 +318,9 @@ export default function UsersPage() {
                         }).length}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">This Month:</span>
-                      <span className="text-sm font-medium">
+                    <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">This Month:</span>
+                      <span className="text-sm font-bold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
                         {users.filter(u => {
                           const userDate = new Date(u.created_at)
                           const currentDate = new Date()
@@ -293,21 +331,37 @@ export default function UsersPage() {
                     </div>
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Recent Activity</h3>
-                  <div className="space-y-2">
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200/50">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                      <i className="ri-time-line text-white text-sm"></i>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+                  </div>
+                  <div className="space-y-3">
                     {users.slice(0, 5).map((user) => (
-                      <div key={user.id} className="flex items-center justify-between text-sm">
-                        <span className="text-gray-900">{user.first_name} {user.last_name}</span>
-                        <span className="text-gray-500">{new Date(user.created_at).toLocaleDateString()}</span>
+                      <div key={user.id} className="flex items-center justify-between p-3 bg-white/60 rounded-lg hover:bg-white/80 transition-colors duration-200">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center shadow-sm">
+                            <span className="text-white text-xs font-semibold">
+                              {user.first_name?.charAt(0)}{user.last_name?.charAt(0)}
+                            </span>
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">{user.first_name} {user.last_name}</span>
+                        </div>
+                        <span className="text-xs text-gray-600 font-medium">{new Date(user.created_at).toLocaleDateString()}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">
-                No users found
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="ri-user-line text-2xl text-gray-400"></i>
+                </div>
+                <p className="text-gray-500 text-lg">No users found</p>
+                <p className="text-gray-400 text-sm">Users will appear here once they register</p>
               </div>
             )}
           </div>

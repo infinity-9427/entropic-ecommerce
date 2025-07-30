@@ -154,60 +154,88 @@ export default function OrdersPage() {
   const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-          Export Orders
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Orders</h1>
+          <p className="text-gray-600 flex items-center">
+            <i className="ri-shopping-cart-line mr-2"></i>
+            Manage and track all customer orders
+          </p>
+        </div>
+        <button className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-200 shadow-lg shadow-amber-500/25 flex items-center space-x-2">
+          <i className="ri-download-line"></i>
+          <span>Export Orders</span>
         </button>
       </div>
 
       {/* Order Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg shadow-blue-500/25">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
+              <p className="text-blue-100 text-sm font-medium">Total Orders</p>
+              <p className="text-3xl font-bold">{orders.length}</p>
+              <p className="text-blue-100 text-xs mt-1">All time orders</p>
             </div>
-            <i className="ri-package-line text-3xl text-blue-500"></i>
+            <div className="bg-white/20 rounded-lg p-3">
+              <i className="ri-shopping-cart-line text-2xl"></i>
+            </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        
+        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg shadow-emerald-500/25">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-green-600">${totalRevenue.toFixed(2)}</p>
+              <p className="text-emerald-100 text-sm font-medium">Total Revenue</p>
+              <p className="text-3xl font-bold">${totalRevenue.toFixed(2)}</p>
+              <p className="text-emerald-100 text-xs mt-1">Total earnings</p>
             </div>
-            <i className="ri-money-dollar-circle-line text-3xl text-green-500"></i>
+            <div className="bg-white/20 rounded-lg p-3">
+              <i className="ri-money-dollar-circle-line text-2xl"></i>
+            </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        
+        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg shadow-purple-500/25">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Average Order</p>
-              <p className="text-2xl font-bold text-blue-600">${averageOrderValue.toFixed(2)}</p>
+              <p className="text-purple-100 text-sm font-medium">Average Order</p>
+              <p className="text-3xl font-bold">${averageOrderValue.toFixed(2)}</p>
+              <p className="text-purple-100 text-xs mt-1">Per order value</p>
             </div>
-            <i className="ri-bar-chart-line text-3xl text-blue-500"></i>
+            <div className="bg-white/20 rounded-lg p-3">
+              <i className="ri-bar-chart-line text-2xl"></i>
+            </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        
+        <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl p-6 text-white shadow-lg shadow-amber-500/25">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Pending Orders</p>
-              <p className="text-2xl font-bold text-yellow-600">
+              <p className="text-amber-100 text-sm font-medium">Pending Orders</p>
+              <p className="text-3xl font-bold">
                 {(orders || []).filter(o => o?.status?.toLowerCase() === 'pending').length}
               </p>
+              <p className="text-amber-100 text-xs mt-1">Awaiting processing</p>
             </div>
-            <i className="ri-time-line text-3xl text-yellow-500"></i>
+            <div className="bg-white/20 rounded-lg p-3">
+              <i className="ri-time-line text-2xl"></i>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Orders by Status */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Order Status Distribution</h2>
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20">
+        <div className="p-6 border-b border-gray-200/50">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <i className="ri-pie-chart-line text-white"></i>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">Order Status Distribution</h2>
+          </div>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -216,16 +244,22 @@ export default function OrdersPage() {
               const statusRevenue = statusOrders.reduce((sum, o) => sum + (o?.total_amount || 0), 0)
               
               return (
-                <div key={status} className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
+                <div key={status} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200/50 hover:shadow-md transition-all duration-200">
+                  <div className="flex items-center justify-between mb-3">
                     <h3 className="text-lg font-medium text-gray-900 capitalize">{status}</h3>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(status)}`}>
+                    <span className={`px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(status)}`}>
                       {statusOrders.length}
                     </span>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    <p>Revenue: ${statusRevenue.toFixed(2)}</p>
-                    <p>Avg: ${statusOrders.length > 0 ? (statusRevenue / statusOrders.length).toFixed(2) : '0.00'}</p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Revenue:</span>
+                      <span className="font-medium text-gray-900">${statusRevenue.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Average:</span>
+                      <span className="font-medium text-gray-900">${statusOrders.length > 0 ? (statusRevenue / statusOrders.length).toFixed(2) : '0.00'}</span>
+                    </div>
                   </div>
                 </div>
               )
@@ -235,9 +269,14 @@ export default function OrdersPage() {
       </div>
 
       {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Recent Orders</h2>
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20">
+        <div className="p-6 border-b border-gray-200/50">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <i className="ri-table-line text-white"></i>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">Recent Orders</h2>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -336,36 +375,43 @@ export default function OrdersPage() {
       </div>
 
       {/* Recent Order Activity */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Recent Activity</h2>
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20">
+        <div className="p-6 border-b border-gray-200/50">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
+              <i className="ri-pulse-line text-white"></i>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">Recent Activity</h2>
+          </div>
         </div>
         <div className="p-6">
           <div className="space-y-4">
             {(orders || []).slice(0, 5).map((order) => (
-              <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
+              <div key={order.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200/50 hover:shadow-md transition-all duration-200">
+                <div className="flex items-center space-x-4">
                   <div className="flex-shrink-0">
-                    <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
-                      <span className="text-white font-medium">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+                      <span className="text-white font-semibold text-sm">
                         {order.user?.first_name?.charAt(0)}{order.user?.last_name?.charAt(0)}
                       </span>
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-semibold text-gray-900">
                       {order.user?.first_name} {order.user?.last_name} placed order #{order.id}
                     </p>
-                    <p className="text-sm text-gray-500">
-                      {order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0} items • ${order.total_amount.toFixed(2)}
+                    <p className="text-sm text-gray-600 flex items-center space-x-2">
+                      <span>{order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0} items</span>
+                      <span>•</span>
+                      <span className="font-medium">${order.total_amount.toFixed(2)}</span>
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
+                <div className="flex items-center space-x-3">
+                  <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
                     {order.status}
                   </span>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-gray-500 font-medium">
                     {new Date(order.created_at).toLocaleDateString()}
                   </span>
                 </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { RefreshCw, AlertCircle, Clock, TrendingUp, TrendingDown } from 'lucide-react'
+import { RefreshCw, AlertCircle, Clock, TrendingUp } from 'lucide-react'
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics'
 import 'remixicon/fonts/remixicon.css'
 
@@ -19,20 +19,20 @@ interface MetricCardProps {
 
 function MetricCard({ title, value, icon, iconColor, trend, className = '' }: MetricCardProps) {
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200 hover:border-gray-200 ${className}`}>
+    <div className={`bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-6 hover:shadow-xl transition-all duration-200 ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <div className="flex items-center space-x-3">
-            <div className={`p-3 rounded-lg ${iconColor}`}>
+          <div className="flex items-center space-x-4">
+            <div className={`w-12 h-12 ${iconColor} rounded-xl flex items-center justify-center shadow-lg`}>
               <i className={`${icon} text-xl text-white`}></i>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-              <p className="text-2xl font-bold text-gray-900">{value}</p>
+              <p className="text-3xl font-bold text-gray-900">{value}</p>
             </div>
           </div>
           {trend && (
-            <div className={`flex items-center mt-3 text-sm font-medium ${trend.isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
+            <div className={`flex items-center mt-4 text-sm font-medium ${trend.isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
               <TrendingUp className={`w-4 h-4 mr-1 ${trend.isPositive ? '' : 'rotate-180'}`} />
               {Math.abs(trend.value)}% from last month
             </div>
@@ -134,57 +134,56 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-          <div className="mb-4 sm:mb-0">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
-            <p className="text-lg text-gray-600 flex items-center">
-              <i className="ri-dashboard-line mr-2 text-xl"></i>
-              Monitor your e-commerce performance in real-time
-            </p>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            {/* Manual refresh button */}
-            <button
-              onClick={refreshMetrics}
-              disabled={loading}
-              className="flex items-center space-x-2 px-3 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span className="font-medium">Refresh</span>
-            </button>
-            
-            {/* Last updated indicator */}
-            {lastUpdated && (
-              <div className="flex items-center space-x-2 text-sm text-gray-500 bg-white rounded-lg px-4 py-2 shadow-sm border border-gray-200">
-                <Clock className="w-4 h-4" />
-                <span>Updated {formatTime(lastUpdated)}</span>
-              </div>
-            )}
-          </div>
+    <div className="p-6 space-y-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+        <div className="mb-4 sm:mb-0">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <p className="text-gray-600 flex items-center">
+            <i className="ri-dashboard-line mr-2"></i>
+            Monitor your e-commerce performance in real-time
+          </p>
         </div>
+        
+        <div className="flex items-center space-x-4">
+          {/* Manual refresh button */}
+          <button
+            onClick={refreshMetrics}
+            disabled={loading}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg shadow-blue-500/25 flex items-center space-x-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+          
+          {/* Last updated indicator */}
+          {lastUpdated && (
+            <div className="flex items-center space-x-2 text-sm text-gray-500 bg-white/80 rounded-xl px-4 py-2 shadow-sm border border-white/20 backdrop-blur-sm">
+              <Clock className="w-4 h-4" />
+              <span>Updated {formatTime(lastUpdated)}</span>
+            </div>
+          )}
+        </div>
+      </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl p-6 mb-8 shadow-sm">
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-red-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-red-800 mb-1">Connection Error</h3>
-                <p className="text-red-700">{error}</p>
-                <p className="text-sm text-red-600 mt-2">Please check your internet connection and try refreshing the page.</p>
-              </div>
+      {/* Error Alert */}
+      {error && (
+        <div className="p-4 bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
+              <AlertCircle className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-red-800 mb-1">Connection Error</h3>
+              <p className="text-red-700">{error}</p>
+              <p className="text-sm text-red-600 mt-2">Please check your internet connection and try refreshing the page.</p>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Main Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Main Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
             title="Total Users"
             value={metrics?.total_users ?? "No data available"}
@@ -196,7 +195,7 @@ export default function DashboardPage() {
           <MetricCard
             title="Total Products"
             value={metrics?.total_products ?? "No data available"}
-            icon="ri-package-line"
+            icon="ri-store-line"
             iconColor="bg-gradient-to-r from-emerald-500 to-emerald-600"
             trend={metrics?.total_products ? { value: 8, isPositive: true } : undefined}
           />
@@ -219,7 +218,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Secondary Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
             title="Avg Order Value"
             value={metrics?.avg_order_value ? formatCurrency(metrics.avg_order_value) : "No data available"}
@@ -253,10 +252,10 @@ export default function DashboardPage() {
         {/* Categories & Recent Orders */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Top Categories */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-6 hover:shadow-xl transition-all duration-200">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg">
-                <i className="ri-list-check text-xl text-white"></i>
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                <i className="ri-list-check text-white"></i>
               </div>
               <h3 className="text-xl font-bold text-gray-900">Top Categories</h3>
             </div>
@@ -287,10 +286,10 @@ export default function DashboardPage() {
           </div>
 
           {/* Recent Orders */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-6 hover:shadow-xl transition-all duration-200">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="p-2 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg">
-                <i className="ri-shopping-bag-line text-xl text-white"></i>
+              <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                <i className="ri-shopping-bag-line text-white"></i>
               </div>
               <h3 className="text-xl font-bold text-gray-900">Recent Orders</h3>
             </div>
@@ -334,7 +333,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Real-time Status Indicator */}
-        <div className="mt-8 flex items-center justify-center">
+        <div className="flex items-center justify-center">
           <div className="bg-white rounded-full px-6 py-3 shadow-sm border border-gray-200 flex items-center space-x-3">
             <div className={`w-3 h-3 rounded-full ${error ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'} shadow-lg`}></div>
             <span className="text-sm font-medium text-gray-700">
@@ -350,6 +349,5 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </div>
-  )
-}
+    )
+  }

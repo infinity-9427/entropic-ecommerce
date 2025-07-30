@@ -124,40 +124,39 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-          <div className="mb-4 sm:mb-0">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Products</h1>
-            <p className="text-lg text-gray-600 flex items-center">
-              <i className="ri-package-line mr-2 text-xl"></i>
-              Manage your product catalog
-            </p>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={loadProducts}
-              disabled={loading}
-              className="flex items-center space-x-2 px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all duration-200 shadow-sm border border-gray-200"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span className="font-medium">Refresh</span>
-            </button>
-            
-            <button
-              onClick={() => setShowForm(true)}
-              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="font-medium">Add Product</span>
-            </button>
-          </div>
+    <div className="p-6 space-y-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+        <div className="mb-4 sm:mb-0">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Products</h1>
+          <p className="text-gray-600 flex items-center">
+            <i className="ri-store-line mr-2"></i>
+            Manage your product catalog
+          </p>
         </div>
+        
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={loadProducts}
+            disabled={loading}
+            className="flex items-center space-x-2 px-4 py-2 bg-white/80 text-gray-700 rounded-xl hover:bg-white disabled:opacity-50 transition-all duration-200 shadow-sm border border-white/20 backdrop-blur-sm"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+          
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg shadow-purple-500/25 flex items-center space-x-2"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Product</span>
+          </button>
+        </div>
+      </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -293,7 +292,7 @@ export default function ProductsPage() {
               <Package className="w-10 h-10 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+            <p className="text-gray-600 max-w-md mx-auto">
               {searchTerm || filterCategory ? 'Try adjusting your search criteria to find what you\'re looking for' : 'Get started by adding your first product to the catalog'}
             </p>
             <button
@@ -388,6 +387,5 @@ export default function ProductsPage() {
           </div>
         )}
       </div>
-    </div>
-  )
-}
+    )
+  }

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useAuth, useAuthenticatedFetch } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { MetricCard } from '@/components/metric-card'
 import 'remixicon/fonts/remixicon.css'
 
 interface User {
@@ -125,64 +126,38 @@ export default function UsersPage() {
 
       {/* User Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg shadow-blue-500/25">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100 text-sm font-medium">Total Users</p>
-              <p className="text-3xl font-bold">{(users || []).length}</p>
-              <p className="text-blue-100 text-xs mt-1">Registered members</p>
-            </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <i className="ri-group-line text-2xl"></i>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Total Users"
+          value={(users || []).length}
+          icon="ri-group-line"
+          iconColor="bg-gradient-to-r from-blue-500 to-blue-600"
+        />
         
-        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg shadow-emerald-500/25">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-emerald-100 text-sm font-medium">Active Users</p>
-              <p className="text-3xl font-bold">{(users || []).filter(u => u?.is_active).length}</p>
-              <p className="text-emerald-100 text-xs mt-1">Currently active</p>
-            </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <i className="ri-user-follow-line text-2xl"></i>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Active Users"
+          value={(users || []).filter(u => u?.is_active).length}
+          icon="ri-user-follow-line"
+          iconColor="bg-gradient-to-r from-emerald-500 to-emerald-600"
+        />
         
-        <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white shadow-lg shadow-red-500/25">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-red-100 text-sm font-medium">Inactive Users</p>
-              <p className="text-3xl font-bold">{(users || []).filter(u => !u?.is_active).length}</p>
-              <p className="text-red-100 text-xs mt-1">Disabled accounts</p>
-            </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <i className="ri-user-unfollow-line text-2xl"></i>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Inactive Users"
+          value={(users || []).filter(u => !u?.is_active).length}
+          icon="ri-user-unfollow-line"
+          iconColor="bg-gradient-to-r from-red-500 to-red-600"
+        />
         
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg shadow-purple-500/25">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-purple-100 text-sm font-medium">New This Month</p>
-              <p className="text-3xl font-bold">
-                {users.filter(u => {
-                  const userDate = new Date(u.created_at)
-                  const currentDate = new Date()
-                  return userDate.getMonth() === currentDate.getMonth() && 
-                         userDate.getFullYear() === currentDate.getFullYear()
-                }).length}
-              </p>
-              <p className="text-purple-100 text-xs mt-1">Recent signups</p>
-            </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <i className="ri-calendar-check-line text-2xl"></i>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="New This Month"
+          value={users.filter(u => {
+            const userDate = new Date(u.created_at)
+            const currentDate = new Date()
+            return userDate.getMonth() === currentDate.getMonth() && 
+                   userDate.getFullYear() === currentDate.getFullYear()
+          }).length}
+          icon="ri-calendar-check-line"
+          iconColor="bg-gradient-to-r from-purple-500 to-purple-600"
+        />
       </div>
 
       {/* Users Table */}

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, memo } from 'react'
 import { useAuth, useAuthenticatedFetch } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { MetricCard } from '@/components/metric-card'
 import 'remixicon/fonts/remixicon.css'
 
 interface SalesMetrics {
@@ -177,57 +178,33 @@ export default function AnalyticsPage() {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg shadow-blue-500/25">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100 text-sm font-medium">Total Users</p>
-              <p className="text-3xl font-bold">{dashboardMetrics?.total_users ?? "0"}</p>
-              <p className="text-blue-100 text-xs mt-1">Registered users</p>
-            </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <i className="ri-user-line text-2xl"></i>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Total Users"
+          value={dashboardMetrics?.total_users ?? "No data available"}
+          icon="ri-user-line"
+          iconColor="bg-gradient-to-r from-blue-500 to-blue-600"
+        />
         
-        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg shadow-emerald-500/25">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-emerald-100 text-sm font-medium">Total Products</p>
-              <p className="text-3xl font-bold">{dashboardMetrics?.total_products ?? "0"}</p>
-              <p className="text-emerald-100 text-xs mt-1">In catalog</p>
-            </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <i className="ri-package-line text-2xl"></i>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Total Products"
+          value={dashboardMetrics?.total_products ?? "No data available"}
+          icon="ri-store-line"
+          iconColor="bg-gradient-to-r from-emerald-500 to-emerald-600"
+        />
         
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg shadow-purple-500/25">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-purple-100 text-sm font-medium">Total Orders</p>
-              <p className="text-3xl font-bold">{dashboardMetrics?.total_orders ?? "0"}</p>
-              <p className="text-purple-100 text-xs mt-1">All time</p>
-            </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <i className="ri-shopping-cart-line text-2xl"></i>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Total Orders"
+          value={dashboardMetrics?.total_orders ?? "No data available"}
+          icon="ri-shopping-cart-line"
+          iconColor="bg-gradient-to-r from-purple-500 to-purple-600"
+        />
         
-        <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl p-6 text-white shadow-lg shadow-amber-500/25">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-amber-100 text-sm font-medium">Total Revenue</p>
-              <p className="text-3xl font-bold">{dashboardMetrics?.total_revenue ? `$${dashboardMetrics.total_revenue.toFixed(2)}` : "$0.00"}</p>
-              <p className="text-amber-100 text-xs mt-1">Total earnings</p>
-            </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <i className="ri-money-dollar-circle-line text-2xl"></i>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Total Revenue"
+          value={dashboardMetrics?.total_revenue ? `$${dashboardMetrics.total_revenue.toFixed(2)}` : "No data available"}
+          icon="ri-money-dollar-circle-line"
+          iconColor="bg-gradient-to-r from-amber-500 to-amber-600"
+        />
       </div>
 
       {/* Sales Metrics */}

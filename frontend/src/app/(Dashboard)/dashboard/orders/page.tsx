@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useAuth, useAuthenticatedFetch } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { MetricCard } from '@/components/metric-card'
 import 'remixicon/fonts/remixicon.css'
 
 interface OrderItem {
@@ -172,59 +173,33 @@ export default function OrdersPage() {
 
       {/* Order Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg shadow-blue-500/25">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100 text-sm font-medium">Total Orders</p>
-              <p className="text-3xl font-bold">{orders.length}</p>
-              <p className="text-blue-100 text-xs mt-1">All time orders</p>
-            </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <i className="ri-shopping-cart-line text-2xl"></i>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Total Orders"
+          value={orders.length}
+          icon="ri-shopping-cart-line"
+          iconColor="bg-gradient-to-r from-blue-500 to-blue-600"
+        />
         
-        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg shadow-emerald-500/25">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-emerald-100 text-sm font-medium">Total Revenue</p>
-              <p className="text-3xl font-bold">${totalRevenue.toFixed(2)}</p>
-              <p className="text-emerald-100 text-xs mt-1">Total earnings</p>
-            </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <i className="ri-money-dollar-circle-line text-2xl"></i>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Total Revenue"
+          value={`$${totalRevenue.toFixed(2)}`}
+          icon="ri-money-dollar-circle-line"
+          iconColor="bg-gradient-to-r from-emerald-500 to-emerald-600"
+        />
         
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg shadow-purple-500/25">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-purple-100 text-sm font-medium">Average Order</p>
-              <p className="text-3xl font-bold">${averageOrderValue.toFixed(2)}</p>
-              <p className="text-purple-100 text-xs mt-1">Per order value</p>
-            </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <i className="ri-bar-chart-line text-2xl"></i>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Average Order"
+          value={`$${averageOrderValue.toFixed(2)}`}
+          icon="ri-bar-chart-line"
+          iconColor="bg-gradient-to-r from-purple-500 to-purple-600"
+        />
         
-        <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl p-6 text-white shadow-lg shadow-amber-500/25">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-amber-100 text-sm font-medium">Pending Orders</p>
-              <p className="text-3xl font-bold">
-                {(orders || []).filter(o => o?.status?.toLowerCase() === 'pending').length}
-              </p>
-              <p className="text-amber-100 text-xs mt-1">Awaiting processing</p>
-            </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <i className="ri-time-line text-2xl"></i>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Pending Orders"
+          value={(orders || []).filter(o => o?.status?.toLowerCase() === 'pending').length}
+          icon="ri-time-line"
+          iconColor="bg-gradient-to-r from-amber-500 to-amber-600"
+        />
       </div>
 
       {/* Orders by Status */}

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useAuth, useAuthenticatedFetch } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import 'remixicon/fonts/remixicon.css'
 
 interface User {
   id: number
@@ -122,7 +123,7 @@ export default function UsersPage() {
               <p className="text-sm font-medium text-gray-600">Total Users</p>
               <p className="text-2xl font-bold text-gray-900">{(users || []).length}</p>
             </div>
-            <div className="text-3xl">👥</div>
+            <i className="ri-group-line text-3xl text-blue-500"></i>
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
@@ -131,7 +132,7 @@ export default function UsersPage() {
               <p className="text-sm font-medium text-gray-600">Active Users</p>
               <p className="text-2xl font-bold text-green-600">{(users || []).filter(u => u?.is_active).length}</p>
             </div>
-            <div className="text-3xl">✅</div>
+            <i className="ri-user-check-line text-3xl text-green-500"></i>
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
@@ -140,7 +141,7 @@ export default function UsersPage() {
               <p className="text-sm font-medium text-gray-600">Inactive Users</p>
               <p className="text-2xl font-bold text-red-600">{(users || []).filter(u => !u?.is_active).length}</p>
             </div>
-            <div className="text-3xl">❌</div>
+            <i className="ri-user-unfollow-line text-3xl text-red-500"></i>
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
@@ -156,7 +157,7 @@ export default function UsersPage() {
                 }).length}
               </p>
             </div>
-            <div className="text-3xl">📅</div>
+            <i className="ri-calendar-check-line text-3xl text-purple-500"></i>
           </div>
         </div>
       </div>
@@ -211,11 +212,12 @@ export default function UsersPage() {
                     {user?.email || 'No email'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
                       user.is_active 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-red-100 text-red-800'
                     }`}>
+                      <i className={`mr-1 ${user.is_active ? 'ri-check-line' : 'ri-close-line'}`}></i>
                       {user.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
@@ -224,13 +226,16 @@ export default function UsersPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900">
+                      <button className="inline-flex items-center text-blue-600 hover:text-blue-900">
+                        <i className="ri-edit-line mr-1"></i>
                         Edit
                       </button>
-                      <button className="text-green-600 hover:text-green-900">
+                      <button className="inline-flex items-center text-green-600 hover:text-green-900">
+                        <i className="ri-eye-line mr-1"></i>
                         View
                       </button>
-                      <button className={`${user.is_active ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}>
+                      <button className={`inline-flex items-center ${user.is_active ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}>
+                        <i className={`mr-1 ${user.is_active ? 'ri-user-unfollow-line' : 'ri-user-follow-line'}`}></i>
                         {user.is_active ? 'Deactivate' : 'Activate'}
                       </button>
                     </div>

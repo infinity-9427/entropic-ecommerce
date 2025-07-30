@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import React, { useCallback, useState, useRef, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, X, Loader2 } from 'lucide-react'
+import { Upload, X, Eye, Loader2 } from 'lucide-react'
+import 'remixicon/fonts/remixicon.css'
 import { dragAndDrop } from '@formkit/drag-and-drop'
 import { uploadToCloudinary } from '@/lib/cloudinary'
 import Image from 'next/image'
@@ -213,14 +214,29 @@ export default function DragDropUploader({
                 </button>
 
                 {/* Image */}
-                <Image
-                  src={image.preview}
-                  alt={`Preview ${index + 1}`}
-                  className="w-full h-full object-cover"
-                  width={200}
-                  height={200}
-                  unoptimized
-                />
+                {image.preview && image.preview.trim() !== '' ? (
+                  <Image
+                    src={image.preview}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    width={200}
+                    height={200}
+                    unoptimized
+                  />
+                ) : image.url && image.url.trim() !== '' ? (
+                  <Image
+                    src={image.url}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    width={200}
+                    height={200}
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                    <Upload className="w-8 h-8 text-gray-400" />
+                  </div>
+                )}
 
                 {/* Status Overlay */}
                 {image.uploading && (
@@ -233,8 +249,9 @@ export default function DragDropUploader({
                 )}
 
                 {image.uploaded && (
-                  <div className="absolute bottom-2 left-2 bg-green-500 text-white px-2 py-1 rounded text-xs">
-                    ✓ Uploaded
+                  <div className="absolute bottom-2 left-2 bg-green-500 text-white px-2 py-1 rounded text-xs flex items-center">
+                    <i className="ri-check-line mr-1"></i>
+                    Uploaded
                   </div>
                 )}
 

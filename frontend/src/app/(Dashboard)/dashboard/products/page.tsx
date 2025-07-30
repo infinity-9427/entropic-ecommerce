@@ -18,7 +18,7 @@ import {
   XCircle
 } from 'lucide-react'
 import { fetchProducts, deleteProduct } from './actions'
-import ProductFormNew from './ProductFormNew'
+import ProductFormNew from './EnhancedProductFormSimple'
 
 interface Product {
   id: number

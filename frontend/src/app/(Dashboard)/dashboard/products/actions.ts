@@ -6,11 +6,28 @@ const API_URL = process.env.API_URL || 'http://localhost:8000'
 
 export interface ProductFormData {
   name: string
-  description: string
+  description?: string
   price: number
   category: string
-  image_url: string
-  images?: Array<{ url: string; public_id: string }>
+  brand?: string
+  sku?: string
+  cost_price?: number
+  compare_at_price?: number
+  tags?: string[]
+  weight?: number
+  dimensions?: {
+    length?: number
+    width?: number
+    height?: number
+  }
+  is_digital?: boolean
+  meta_title?: string
+  meta_description?: string
+  slug?: string
+  is_featured?: boolean
+  image_url?: string
+  images?: Array<{ url: string; public_id: string; alt_text?: string }>
+  primary_image_url?: string
   stock_quantity: number
   is_active?: boolean
 }

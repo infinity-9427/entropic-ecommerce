@@ -1,4 +1,5 @@
 import { Header } from '@/components/header';
+import 'remixicon/fonts/remixicon.css';
 
 export default function DealsPage() {
   return (
@@ -10,7 +11,7 @@ export default function DealsPage() {
           <p className="text-xl text-muted-foreground mb-8">Discover amazing discounts on your favorite products</p>
           
           <div className="bg-card p-8 rounded-lg border">
-            <div className="text-6xl mb-4">🎉</div>
+            <i className="ri-gift-line text-6xl mb-4 text-purple-500"></i>
             <h2 className="text-2xl font-semibold mb-4">Great Deals Coming Soon!</h2>
             <p className="text-muted-foreground">
               We&apos;re working on bringing you the best deals and discounts. 

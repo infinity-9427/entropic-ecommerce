@@ -2,8 +2,12 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Header } from '@/components/header';
-import { ProductCard } from '@/components/product-card';
-import { ProductGridSkeleton } from '@/components/ui/product-skeleton';
+import Image from 'next/image'
+import { ProductCard } from '@/components/product-card'
+import { ProductGridSkeleton } from '@/components/ui/product-skeleton'
+import BrandTicker from '@/components/brand-ticker'
+import { ShoppingCart, Star, Package, Truck, Shield, HeartHandshake } from 'lucide-react'
+import 'remixicon/fonts/remixicon.css'
 import { apiService, type Product } from '@/lib/api';
 import { BounceLoader } from 'react-spinners';
 
@@ -212,7 +216,7 @@ export default function Home() {
         {error && !loading && (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="text-center max-w-md">
-              <div className="text-6xl mb-4">⚠️</div>
+              <i className="ri-error-warning-line text-6xl mb-4 text-orange-500"></i>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 Service Temporarily Unavailable
               </h3>

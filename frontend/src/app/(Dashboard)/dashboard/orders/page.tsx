@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useAuth, useAuthenticatedFetch } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import 'remixicon/fonts/remixicon.css'
 
 interface OrderItem {
   id: number
@@ -169,7 +170,7 @@ export default function OrdersPage() {
               <p className="text-sm font-medium text-gray-600">Total Orders</p>
               <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
             </div>
-            <div className="text-3xl">📦</div>
+            <i className="ri-package-line text-3xl text-blue-500"></i>
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
@@ -178,7 +179,7 @@ export default function OrdersPage() {
               <p className="text-sm font-medium text-gray-600">Total Revenue</p>
               <p className="text-2xl font-bold text-green-600">${totalRevenue.toFixed(2)}</p>
             </div>
-            <div className="text-3xl">💰</div>
+            <i className="ri-money-dollar-circle-line text-3xl text-green-500"></i>
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
@@ -187,7 +188,7 @@ export default function OrdersPage() {
               <p className="text-sm font-medium text-gray-600">Average Order</p>
               <p className="text-2xl font-bold text-blue-600">${averageOrderValue.toFixed(2)}</p>
             </div>
-            <div className="text-3xl">📊</div>
+            <i className="ri-bar-chart-line text-3xl text-blue-500"></i>
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
@@ -198,7 +199,7 @@ export default function OrdersPage() {
                 {(orders || []).filter(o => o?.status?.toLowerCase() === 'pending').length}
               </p>
             </div>
-            <div className="text-3xl">⏳</div>
+            <i className="ri-time-line text-3xl text-yellow-500"></i>
           </div>
         </div>
       </div>
@@ -313,13 +314,16 @@ export default function OrdersPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900">
+                      <button className="inline-flex items-center text-blue-600 hover:text-blue-900">
+                        <i className="ri-eye-line mr-1"></i>
                         View
                       </button>
-                      <button className="text-green-600 hover:text-green-900">
+                      <button className="inline-flex items-center text-green-600 hover:text-green-900">
+                        <i className="ri-edit-line mr-1"></i>
                         Edit
                       </button>
-                      <button className="text-purple-600 hover:text-purple-900">
+                      <button className="inline-flex items-center text-purple-600 hover:text-purple-900">
+                        <i className="ri-truck-line mr-1"></i>
                         Ship
                       </button>
                     </div>

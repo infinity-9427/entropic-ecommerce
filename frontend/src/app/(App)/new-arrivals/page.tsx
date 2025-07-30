@@ -1,4 +1,5 @@
 import { Header } from '@/components/header';
+import 'remixicon/fonts/remixicon.css';
 
 export default function NewArrivalsPage() {
   return (
@@ -10,7 +11,7 @@ export default function NewArrivalsPage() {
           <p className="text-xl text-muted-foreground mb-8">Check out the latest products in our collection</p>
           
           <div className="bg-card p-8 rounded-lg border">
-            <div className="text-6xl mb-4">✨</div>
+            <i className="ri-sparkling-line text-6xl mb-4 text-yellow-500"></i>
             <h2 className="text-2xl font-semibold mb-4">Fresh Products Coming Soon!</h2>
             <p className="text-muted-foreground">
               We&apos;re constantly adding new and exciting products to our store. 

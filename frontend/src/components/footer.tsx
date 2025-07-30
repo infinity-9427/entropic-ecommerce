@@ -1,4 +1,5 @@
-import Link from 'next/link';
+import Link from 'next/link'
+import 'remixicon/fonts/remixicon.css';
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, CreditCard, Truck, Shield, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -239,7 +240,7 @@ export function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-2 text-xs text-gray-400">
             <p>&copy; 2025 Entropic. All rights reserved.</p>
             <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3">
-              <p>Designed with ❤️ for amazing shopping experiences</p>
+              <p>Designed with <i className="ri-heart-line text-red-500"></i> for amazing shopping experiences</p>
               <span className="hidden md:inline">•</span>
               <p className="text-sm">
                 Created by{' '}

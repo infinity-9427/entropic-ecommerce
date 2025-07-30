@@ -30,7 +30,7 @@ export default function ProductFormNew({ product, onSuccess, onCancel }: Product
   const [images, setImages] = useState<ImageFile[]>([])
 
   // Initialize images from existing product
-  const initialImages = product?.images?.map(img => ({
+  const initialImages = product?.images?.filter(img => img.url && img.url.trim() !== '').map(img => ({
     file: new File([], ''), // Empty file for existing images
     preview: img.url,
     url: img.url,

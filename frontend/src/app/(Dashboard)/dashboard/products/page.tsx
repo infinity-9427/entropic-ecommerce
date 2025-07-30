@@ -14,8 +14,9 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { fetchProducts, deleteProduct } from './actions'
-import ProductFormNew from './EnhancedProductFormSimple'
+import SimpleProductForm from './SimpleProductForm'
 import { DeleteConfirmationDialog } from '@/components/ui/delete-confirmation-dialog'
+import { Skeleton } from '@/components/ui/skeleton'
 import 'remixicon/fonts/remixicon.css'
 
 interface Product {
@@ -50,6 +51,7 @@ export default function ProductsPage() {
     product: null,
     isDeleting: false
   })
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set())
 
   const loadProducts = async () => {
     try {
@@ -172,7 +174,7 @@ export default function ProductsPage() {
 
   if (showForm) {
     return (
-      <ProductFormNew
+      <SimpleProductForm
         product={editingProduct}
         onSuccess={() => handleFormSuccess(!!editingProduct)}
         onCancel={handleCloseForm}
@@ -365,20 +367,20 @@ export default function ProductsPage() {
             {filteredProducts.map((product) => (
               <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 transform hover:-translate-y-1">
                 {/* Product Image */}
-                <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
-                  {product.image_url ? (
+                <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100">
+                  {product.image_url && !imageErrors.has(product.id) ? (
                     <Image
                       src={product.image_url}
                       alt={product.name}
                       fill
                       className="object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = '/placeholder.svg'
+                      onError={() => {
+                        setImageErrors(prev => new Set(prev).add(product.id))
                       }}
                     />
                   ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <Package className="w-12 h-12 text-gray-400" />
+                    <div className="w-full h-full p-4">
+                      <Skeleton className="w-full h-full" />
                     </div>
                   )}
                   

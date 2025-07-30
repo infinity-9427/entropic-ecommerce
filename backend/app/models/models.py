@@ -95,9 +95,9 @@ class Product(Base):
     brand = Column(String, index=True)  # Added brand field
     sku = Column(String, unique=True, index=True)  # Added SKU for inventory management
     
-    # Enhanced image handling - now required and supports multiple images
-    images = Column(JSON, nullable=False)  # Array of image objects with url, public_id, alt_text
-    primary_image_url = Column(String, nullable=False)  # Main product image (required)
+    # Enhanced image handling - now supports multiple images and optional
+    images = Column(JSON, nullable=True)  # Array of image objects with url, public_id, alt_text
+    primary_image_url = Column(String, nullable=True)  # Main product image (optional)
     
     # Inventory and pricing
     stock_quantity = Column(Integer, default=0)

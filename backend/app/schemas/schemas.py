@@ -53,9 +53,9 @@ class ProductBase(BaseModel):
     brand: Optional[str] = None
     sku: Optional[str] = None
     
-    # Enhanced image handling - now required
-    images: List[ProductImage] = Field(..., min_length=1)  # At least one image required
-    primary_image_url: str  # Required main product image
+    # Enhanced image handling - now optional for simplified forms
+    images: Optional[List[ProductImage]] = Field(default_factory=list)  # Images are optional
+    primary_image_url: Optional[str] = None  # Optional main product image
     
     # Inventory and pricing
     stock_quantity: int = Field(..., ge=0)

@@ -69,7 +69,21 @@ class ProductService:
         return query.offset(skip).limit(limit).all()
 
     def create_product(self, product: schemas.ProductCreate) -> models.Product:
-        db_product = models.Product(**product.dict())
+        # Handle case where no images are provided
+        product_dict = product.dict()
+        
+        # Handle empty SKU and brand values to avoid unique constraint issues
+        if product_dict.get('sku') == '':
+            product_dict['sku'] = None
+        if product_dict.get('brand') == '':
+            product_dict['brand'] = None
+        
+        # Ensure primary_image_url is set if images are provided
+        if product_dict.get('images') and len(product_dict['images']) > 0:
+            if not product_dict.get('primary_image_url'):
+                product_dict['primary_image_url'] = product_dict['images'][0]['url']
+        
+        db_product = models.Product(**product_dict)
         self.db.add(db_product)
         self.db.commit()
         self.db.refresh(db_product)
@@ -97,6 +111,13 @@ class ProductService:
             return None
         
         update_data = product.dict(exclude_unset=True)
+        
+        # Handle empty SKU and brand values to avoid unique constraint issues
+        if 'sku' in update_data and update_data['sku'] == '':
+            update_data['sku'] = None
+        if 'brand' in update_data and update_data['brand'] == '':
+            update_data['brand'] = None
+        
         for field, value in update_data.items():
             setattr(db_product, field, value)
         

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ShoppingCart, Package } from 'lucide-react';
 import { Product } from '@/lib/api';
 import { useCartStore } from '@/lib/store';
@@ -33,8 +34,8 @@ export function ProductCard({ product }: ProductCardProps) {
     <Card className="group overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col p-0 gap-0">
       <div className="aspect-square overflow-hidden bg-gray-100 flex items-center justify-center">
         {imageError || !imageUrl ? (
-          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-            <Package className="h-16 w-16 text-gray-400" />
+          <div className="w-full h-full bg-gray-50 flex items-center justify-center p-4">
+            <Skeleton className="w-full h-full" />
           </div>
         ) : (
           <Image

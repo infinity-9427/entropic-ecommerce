@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Inter, Geist_Mono } from 'next/font/google'
 import './(App)/globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
-import VoiceAssistant from '@/components/VoiceAssistant'
 
 const inter = Inter({
   variable: "--font-inter",
@@ -57,7 +56,6 @@ export default function RootLayout({
       <body className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}>
         <AuthProvider>
           {children}
-          <VoiceAssistant />
         </AuthProvider>
       </body>
     </html>

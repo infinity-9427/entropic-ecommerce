@@ -4,6 +4,7 @@ import { ReactNode } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
+import 'remixicon/fonts/remixicon.css'
 // Temporarily commented out for development
 // import { useRouter } from 'next/navigation'
 // import { useEffect } from 'react'
@@ -54,126 +55,169 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="flex h-screen">
         {/* Sidebar */}
-        <div className="w-64 bg-white shadow-lg">
-          <div className="p-6">
-            <h1 className="text-2xl font-bold text-gray-800">
-              Entropic Dashboard
-            </h1>
-            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600">Welcome,</p>
-              <p className="font-medium text-gray-800">
-                {user?.first_name || 'Guest'} {user?.last_name || 'User'}
-              </p>
-              {user?.is_admin && (
-                <span className="inline-block mt-1 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
-                  Admin
-                </span>
-              )}
-            </div>
-          </div>
-          <nav className="mt-6">
-            <div className="px-6 py-3">
-              <Link
-                href="/dashboard"
-                className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                  isActiveRoute('/dashboard') 
-                    ? 'text-white bg-blue-600' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                </svg>
-                Overview
-              </Link>
-            </div>
-            <div className="px-6 py-3">
-              <Link
-                href="/dashboard/analytics"
-                className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                  isActiveRoute('/dashboard/analytics') 
-                    ? 'text-white bg-blue-600' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                Analytics
-              </Link>
-            </div>
-            <div className="px-6 py-3">
-              <Link
-                href="/dashboard/products"
-                className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                  isActiveRoute('/dashboard/products') 
-                    ? 'text-white bg-blue-600' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-                Products
-              </Link>
-            </div>
-            <div className="px-6 py-3">
-              <Link
-                href="/dashboard/orders"
-                className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                  isActiveRoute('/dashboard/orders') 
-                    ? 'text-white bg-blue-600' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                Orders
-              </Link>
-            </div>
-            <div className="px-6 py-3">
-              <Link
-                href="/dashboard/users"
-                className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                  isActiveRoute('/dashboard/users') 
-                    ? 'text-white bg-blue-600' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                </svg>
-                Users
-              </Link>
+        <div className="w-72 bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl flex flex-col">
+          {/* Header */}
+          <div className="p-6 border-b border-slate-700/50">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+                <i className="ri-dashboard-line text-xl text-white"></i>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white">
+                  Entropic
+                </h1>
+                <p className="text-xs text-slate-400">Dashboard</p>
+              </div>
             </div>
             
-            {/* Logout Button - Temporarily disabled for development */}
-            <div className="px-6 py-3 mt-auto">
-              <button
-                onClick={() => {
-                  // Temporarily disabled for development
-                  // handleLogout()
-                  console.log('Logout temporarily disabled for development')
-                }}
-                className="w-full flex items-center px-4 py-2 text-gray-400 hover:bg-gray-50 rounded-lg cursor-not-allowed"
-                disabled
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                Logout (Disabled)
-              </button>
+            {/* User Info */}
+            <div className="bg-slate-800/50 rounded-xl p-4 backdrop-blur-sm border border-slate-700/30">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center shadow-lg">
+                  <i className="ri-user-line text-white"></i>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-slate-300">Welcome back,</p>
+                  <p className="font-semibold text-white truncate">
+                    {user?.first_name || 'Guest'} {user?.last_name || 'User'}
+                  </p>
+                  {user?.is_admin && (
+                    <span className="inline-flex items-center px-2 py-1 text-xs bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full mt-1 shadow-sm">
+                      <i className="ri-vip-crown-line mr-1"></i>
+                      Admin
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
+          </div>
+
+          {/* Navigation */}
+          <nav className="px-4 py-6 space-y-2 flex-1">
+            <Link
+              href="/dashboard"
+              className={`group flex items-center px-4 py-3 rounded-xl transition-all duration-200 ${
+                isActiveRoute('/dashboard') 
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25' 
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 transition-all duration-200 ${
+                isActiveRoute('/dashboard') 
+                  ? 'bg-white/20' 
+                  : 'bg-slate-700/50 group-hover:bg-slate-600/50'
+              }`}>
+                <i className="ri-dashboard-3-line text-lg"></i>
+              </div>
+              <span className="font-medium">Overview</span>
+              {isActiveRoute('/dashboard') && (
+                <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+              )}
+            </Link>
+
+            <Link
+              href="/dashboard/analytics"
+              className={`group flex items-center px-4 py-3 rounded-xl transition-all duration-200 ${
+                isActiveRoute('/dashboard/analytics') 
+                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25' 
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 transition-all duration-200 ${
+                isActiveRoute('/dashboard/analytics') 
+                  ? 'bg-white/20' 
+                  : 'bg-slate-700/50 group-hover:bg-slate-600/50'
+              }`}>
+                <i className="ri-bar-chart-line text-lg"></i>
+              </div>
+              <span className="font-medium">Analytics</span>
+              {isActiveRoute('/dashboard/analytics') && (
+                <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+              )}
+            </Link>
+
+            <Link
+              href="/dashboard/products"
+              className={`group flex items-center px-4 py-3 rounded-xl transition-all duration-200 ${
+                isActiveRoute('/dashboard/products') 
+                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/25' 
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 transition-all duration-200 ${
+                isActiveRoute('/dashboard/products') 
+                  ? 'bg-white/20' 
+                  : 'bg-slate-700/50 group-hover:bg-slate-600/50'
+              }`}>
+                <i className="ri-package-line text-lg"></i>
+              </div>
+              <span className="font-medium">Products</span>
+              {isActiveRoute('/dashboard/products') && (
+                <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+              )}
+            </Link>
+
+            <Link
+              href="/dashboard/orders"
+              className={`group flex items-center px-4 py-3 rounded-xl transition-all duration-200 ${
+                isActiveRoute('/dashboard/orders') 
+                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/25' 
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 transition-all duration-200 ${
+                isActiveRoute('/dashboard/orders') 
+                  ? 'bg-white/20' 
+                  : 'bg-slate-700/50 group-hover:bg-slate-600/50'
+              }`}>
+                <i className="ri-shopping-cart-line text-lg"></i>
+              </div>
+              <span className="font-medium">Orders</span>
+              {isActiveRoute('/dashboard/orders') && (
+                <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+              )}
+            </Link>
+
+            <Link
+              href="/dashboard/users"
+              className={`group flex items-center px-4 py-3 rounded-xl transition-all duration-200 ${
+                isActiveRoute('/dashboard/users') 
+                  ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-lg shadow-pink-500/25' 
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 transition-all duration-200 ${
+                isActiveRoute('/dashboard/users') 
+                  ? 'bg-white/20' 
+                  : 'bg-slate-700/50 group-hover:bg-slate-600/50'
+              }`}>
+                <i className="ri-group-line text-lg"></i>
+              </div>
+              <span className="font-medium">Users</span>
+              {isActiveRoute('/dashboard/users') && (
+                <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+              )}
+            </Link>
           </nav>
+
+          {/* Bottom Section */}
+          <div className="p-4 border-t border-slate-700/30">
+            <div className="bg-slate-800/50 rounded-xl p-4 backdrop-blur-sm border border-slate-700/30">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                <span className="text-sm text-slate-300">System Status</span>
+              </div>
+              <p className="text-xs text-slate-400">All services operational</p>
+            </div>
+          </div>
         </div>
 
         {/* Main Content */}
         <div className="flex-1 overflow-auto">
-          <div className="p-8">
+          <div className="h-full">
             {children}
           </div>
         </div>

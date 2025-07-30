@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { fetchProducts, deleteProduct } from './actions'
 import ProductFormNew from './EnhancedProductFormSimple'
+import 'remixicon/fonts/remixicon.css'
 
 interface Product {
   id: number
@@ -123,87 +124,106 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Products</h1>
-            <p className="text-gray-600">Manage your product catalog</p>
+          <div className="mb-4 sm:mb-0">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Products</h1>
+            <p className="text-lg text-gray-600 flex items-center">
+              <i className="ri-package-line mr-2 text-xl"></i>
+              Manage your product catalog
+            </p>
           </div>
           
-          <div className="flex items-center space-x-4 mt-4 sm:mt-0">
+          <div className="flex items-center space-x-4">
             <button
               onClick={loadProducts}
               disabled={loading}
-              className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all duration-200 shadow-sm border border-gray-200"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
+              <span className="font-medium">Refresh</span>
             </button>
             
             <button
               onClick={() => setShowForm(true)}
-              className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               <Plus className="w-4 h-4" />
-              <span>Add Product</span>
+              <span className="font-medium">Add Product</span>
             </button>
           </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Products</p>
-                <p className="text-2xl font-bold text-gray-900">{products.length}</p>
+              <div className="flex items-center space-x-3">
+                <div className="p-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
+                  <i className="ri-package-line text-xl text-white"></i>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Products</p>
+                  <p className="text-2xl font-bold text-gray-900">{products.length}</p>
+                </div>
               </div>
-              <Package className="w-8 h-8 text-blue-600" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Products</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {products.filter(p => p.is_active).length}
-                </p>
+              <div className="flex items-center space-x-3">
+                <div className="p-3 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600">
+                  <i className="ri-check-line text-xl text-white"></i>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Active Products</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {products.filter(p => p.is_active).length}
+                  </p>
+                </div>
               </div>
-              <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Categories</p>
-                <p className="text-2xl font-bold text-gray-900">{categories.length}</p>
+              <div className="flex items-center space-x-3">
+                <div className="p-3 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600">
+                  <i className="ri-function-line text-xl text-white"></i>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Categories</p>
+                  <p className="text-2xl font-bold text-gray-900">{categories.length}</p>
+                </div>
               </div>
-              <Filter className="w-8 h-8 text-purple-600" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Avg Price</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {products.length > 0 
-                    ? formatCurrency(products.reduce((sum, p) => sum + p.price, 0) / products.length)
-                    : '$0.00'
-                  }
-                </p>
+              <div className="flex items-center space-x-3">
+                <div className="p-3 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600">
+                  <i className="ri-money-dollar-circle-line text-xl text-white"></i>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Avg Price</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {products.length > 0 
+                      ? formatCurrency(products.reduce((sum, p) => sum + p.price, 0) / products.length)
+                      : '$0.00'
+                    }
+                  </p>
+                </div>
               </div>
-              <DollarSign className="w-8 h-8 text-yellow-600" />
             </div>
           </div>
         </div>
 
         {/* Search and Filter */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 hover:shadow-md transition-all duration-200">
           <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -212,14 +232,14 @@ export default function ProductsPage() {
                 placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               />
             </div>
             
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
             >
               <option value="">All Categories</option>
               {categories.map(category => (
@@ -229,11 +249,12 @@ export default function ProductsPage() {
           </div>
 
           {lastUpdated && (
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
               <div className="flex items-center space-x-2 text-sm text-gray-500">
+                <i className="ri-time-line"></i>
                 <span>Last updated: {formatTime(lastUpdated)}</span>
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
                 Showing {filteredProducts.length} of {products.length} products
               </div>
             </div>
@@ -242,12 +263,14 @@ export default function ProductsPage() {
 
         {/* Error Alert */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center space-x-2">
-              <AlertCircle className="w-5 h-5 text-red-600" />
-              <div>
-                <h3 className="text-sm font-medium text-red-800">Error</h3>
-                <p className="text-sm text-red-700 mt-1">{error}</p>
+          <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl p-6 mb-6 shadow-sm">
+            <div className="flex items-start space-x-3">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-red-800 mb-1">Error</h3>
+                <p className="text-red-700">{error}</p>
               </div>
             </div>
           </div>
@@ -255,36 +278,38 @@ export default function ProductsPage() {
 
         {/* Products Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-white rounded-lg shadow-md p-6 animate-pulse">
-                <div className="w-full h-48 bg-gray-300 rounded-lg mb-4"></div>
-                <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+              <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-pulse">
+                <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
               </div>
             ))}
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="text-center py-12">
-            <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-            <p className="text-gray-600 mb-6">
-              {searchTerm || filterCategory ? 'Try adjusting your search criteria' : 'Get started by adding your first product'}
+            <div className="w-20 h-20 bg-gradient-to-r from-gray-100 to-gray-200 rounded-xl flex items-center justify-center mx-auto mb-6">
+              <Package className="w-10 h-10 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              {searchTerm || filterCategory ? 'Try adjusting your search criteria to find what you\'re looking for' : 'Get started by adding your first product to the catalog'}
             </p>
             <button
               onClick={() => setShowForm(true)}
-              className="inline-flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               <Plus className="w-4 h-4" />
               <span>Add Product</span>
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6">
             {filteredProducts.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 transform hover:-translate-y-1">
                 {/* Product Image */}
-                <div className="relative h-48 bg-gray-200">
+                <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
                   {product.image_url ? (
                     <Image
                       src={product.image_url}
@@ -302,13 +327,15 @@ export default function ProductsPage() {
                   )}
                   
                   {/* Status Badge */}
-                  <div className="absolute top-2 right-2">
+                  <div className="absolute top-3 right-3">
                     {product.is_active ? (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 shadow-sm">
+                        <i className="ri-check-line mr-1"></i>
                         Active
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 shadow-sm">
+                        <i className="ri-close-line mr-1"></i>
                         Inactive
                       </span>
                     )}
@@ -316,29 +343,32 @@ export default function ProductsPage() {
                 </div>
 
                 {/* Product Info */}
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-1 truncate">{product.name}</h3>
-                  <p className="text-sm text-gray-600 mb-2 line-clamp-2">{product.description}</p>
+                <div className="p-5">
+                  <h3 className="font-bold text-gray-900 mb-2 truncate text-lg">{product.name}</h3>
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">{product.description}</p>
                   
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-lg font-bold text-gray-900">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xl font-bold text-gray-900">
                       {formatCurrency(product.price)}
                     </span>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
                       Stock: {product.stock_quantity}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                    <span>{product.category}</span>
-                    <span>{new Date(product.created_at).toLocaleDateString()}</span>
+                    <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-full font-medium">{product.category}</span>
+                    <span className="flex items-center">
+                      <i className="ri-calendar-line mr-1"></i>
+                      {new Date(product.created_at).toLocaleDateString()}
+                    </span>
                   </div>
 
                   {/* Action Buttons */}
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleEditProduct(product)}
-                      className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                      className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all duration-200 font-medium"
                     >
                       <Edit3 className="w-4 h-4" />
                       <span>Edit</span>
@@ -346,7 +376,7 @@ export default function ProductsPage() {
                     
                     <button
                       onClick={() => handleDeleteProduct(product.id)}
-                      className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                      className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-gradient-to-r from-red-50 to-red-100 text-red-700 rounded-lg hover:from-red-100 hover:to-red-200 transition-all duration-200 font-medium"
                     >
                       <Trash2 className="w-4 h-4" />
                       <span>Delete</span>

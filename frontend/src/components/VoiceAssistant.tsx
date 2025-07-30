@@ -17,6 +17,7 @@ import {
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
+import { toast } from "sonner";
 
 interface Message {
   id: string;
@@ -142,7 +143,7 @@ const VoiceAssistant = () => {
       stream.getTracks().forEach(track => track.stop());
     } catch (error) {
       console.error("Microphone permission denied:", error);
-      alert('Microphone permission is required for voice recording');
+      toast.error('Microphone permission is required for voice recording');
       return;
     }
 
@@ -157,7 +158,7 @@ const VoiceAssistant = () => {
     } catch (error) {
       console.error("Failed to start speech recognition:", error);
       setIsRecording(false);
-      alert('Failed to start voice recording');
+      toast.error('Failed to start voice recording');
     }
   };
 
@@ -262,7 +263,7 @@ const VoiceAssistant = () => {
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         type: "assistant",
-        content: `I'm having trouble connecting to the enhanced RAG system. Error: ${error instanceof Error ? error.message : 'Unknown error'}. Please check that the backend service is running and Ollama is available.`,
+        content: `We're experiencing issues. Please, try again later.`,
         timestamp: new Date(),
       };
 

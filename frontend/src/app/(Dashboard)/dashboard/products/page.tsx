@@ -8,17 +8,14 @@ import {
   Filter, 
   Edit3, 
   Trash2, 
-  Eye, 
   Package, 
-  DollarSign,
-  TrendingUp,
   RefreshCw,
   AlertCircle,
-  CheckCircle,
-  XCircle
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { fetchProducts, deleteProduct } from './actions'
 import ProductFormNew from './EnhancedProductFormSimple'
+import { DeleteConfirmationDialog } from '@/components/ui/delete-confirmation-dialog'
 import 'remixicon/fonts/remixicon.css'
 
 interface Product {
@@ -44,6 +41,15 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean
+    product: Product | null
+    isDeleting: boolean
+  }>({
+    open: false,
+    product: null,
+    isDeleting: false
+  })
 
   const loadProducts = async () => {
     try {
@@ -54,8 +60,12 @@ export default function ProductsPage() {
       setLastUpdated(new Date())
     } catch (err) {
       console.error('Products fetch error:', err)
-      setError(err instanceof Error ? err.message : 'Failed to fetch products')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch products'
+      setError(errorMessage)
       setProducts([])
+      toast.error('Failed to load products', {
+        description: errorMessage
+      })
     } finally {
       setLoading(false)
     }
@@ -66,20 +76,67 @@ export default function ProductsPage() {
   }, [])
 
   const handleDeleteProduct = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this product?')) return
-
+    setDeleteDialog(prev => ({ ...prev, isDeleting: true }))
+    
     try {
       await deleteProduct(id)
+      toast.success('Product deleted successfully', {
+        description: `"${deleteDialog.product?.name}" has been removed from your catalog.`
+      })
       await loadProducts() // Refresh the list
     } catch (err) {
       console.error('Delete error:', err)
-      setError(err instanceof Error ? err.message : 'Failed to delete product')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete product'
+      toast.error('Failed to delete product', {
+        description: errorMessage
+      })
+      setError(errorMessage)
+    } finally {
+      setDeleteDialog({
+        open: false,
+        product: null,
+        isDeleting: false
+      })
     }
+  }
+
+  const openDeleteDialog = (product: Product) => {
+    console.log('Opening delete dialog for product:', product.name)
+    setDeleteDialog({
+      open: true,
+      product,
+      isDeleting: false
+    })
+  }
+
+  const closeDeleteDialog = () => {
+    setDeleteDialog({
+      open: false,
+      product: null,
+      isDeleting: false
+    })
   }
 
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product)
     setShowForm(true)
+  }
+
+  const handleFormSuccess = (isEditing: boolean) => {
+    setShowForm(false)
+    setEditingProduct(null)
+    loadProducts() // Refresh after form closes
+    
+    // Show appropriate success toast
+    if (isEditing) {
+      toast.success('Product updated successfully', {
+        description: 'Your product changes have been saved.'
+      })
+    } else {
+      toast.success('Product created successfully', {
+        description: 'Your new product has been added to the catalog.'
+      })
+    }
   }
 
   const handleCloseForm = () => {
@@ -117,7 +174,7 @@ export default function ProductsPage() {
     return (
       <ProductFormNew
         product={editingProduct}
-        onSuccess={handleCloseForm}
+        onSuccess={() => handleFormSuccess(!!editingProduct)}
         onCancel={handleCloseForm}
       />
     )
@@ -374,7 +431,7 @@ export default function ProductsPage() {
                     </button>
                     
                     <button
-                      onClick={() => handleDeleteProduct(product.id)}
+                      onClick={() => openDeleteDialog(product)}
                       className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-gradient-to-r from-red-50 to-red-100 text-red-700 rounded-lg hover:from-red-100 hover:to-red-200 transition-all duration-200 font-medium"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -386,6 +443,17 @@ export default function ProductsPage() {
             ))}
           </div>
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <DeleteConfirmationDialog
+          open={deleteDialog.open}
+          onOpenChange={closeDeleteDialog}
+          onConfirm={() => deleteDialog.product && handleDeleteProduct(deleteDialog.product.id)}
+          title="Delete Product"
+          itemName={deleteDialog.product?.name}
+          description={`Are you sure you want to delete "${deleteDialog.product?.name}"? This will permanently remove it from your catalog and cannot be undone.`}
+          isLoading={deleteDialog.isDeleting}
+        />
       </div>
     )
   }

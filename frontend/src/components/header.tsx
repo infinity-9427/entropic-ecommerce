@@ -60,7 +60,7 @@ export function Header({
             <div className="hidden md:flex items-center space-x-4 text-xs text-gray-300">
               <div className="flex items-center space-x-1">
                 <Phone className="h-3 w-3" />
-                <span>+1 (555) 123-4567</span>
+                <span>+57 (319) 525-5624</span>
               </div>
               <div className="flex items-center space-x-1">
                 <MapPin className="h-3 w-3" />

@@ -1,4 +1,4 @@
-# 🚀 Entropic E-commerce: Learning Project & Portfolio Demo
+# 🚀 Entropic E-commerce
 
 **A developing e-commerce platform exploring modern web technologies and AI integration**
 
@@ -10,7 +10,6 @@
 
 ## 📋 **Complete Documentation**
 
-**📖 [ENTROPIC_ECOMMERCE_ARCHITECTURE.md](./ENTROPIC_ECOMMERCE_ARCHITECTURE.md) - READ THIS FIRST!**
 
 This file contains the complete architecture overview, implementation status, and improvement roadmap.
 
@@ -189,9 +188,6 @@ make dev-frontend   # Frontend only
 
 ---
 
-**Built with ❤️ as a learning journey exploring modern web development, AI integration, and software engineering practices.**
-
-For complete technical details, architecture notes, and learning roadmap, see **[ENTROPIC_ECOMMERCE_ARCHITECTURE.md](./ENTROPIC_ECOMMERCE_ARCHITECTURE.md)**.
 
 ## 📋 Available Commands
 
@@ -298,6 +294,5 @@ Run `make help` or `make` to see all available commands:
 
 ---
 
-Built with ❤️ as a learning project exploring modern web development and AI integration.
 
-For complete technical details and architecture notes, see **[ENTROPIC_ECOMMERCE_ARCHITECTURE.md](./ENTROPIC_ECOMMERCE_ARCHITECTURE.md)**.
+
